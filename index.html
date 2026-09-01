@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI 3D Room Designer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; touch-action: manipulation; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        #canvas-container { width: 100%; height: 50vh; background-color: #1a1a1a; position: relative; }
+        @media (min-height: 700px) { #canvas-container { height: 55vh; } }
+        .editor-subtab { display: none; }
+        .editor-subtab.active { display: block; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal-sheet { background: white; width: 100%; max-width: 28rem; border-radius: 1.25rem 1.25rem 0 0; max-height: 85vh; overflow-y: auto; animation: slideUp 0.25s ease-out; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .style-card.selected { outline: 2px solid #4f46e5; outline-offset: -2px; }
+        .furn-btn:active { transform: scale(0.95); }
+        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 0.6rem 1.2rem; border-radius: 999px; font-size: 0.8rem; z-index: 200; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(-8px); }
+        ::-webkit-scrollbar { height: 4px; width: 4px; }
+        .obj-row.active { background-color: #eef2ff; border-color: #6366f1; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+    <header class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md sticky top-0 z-50">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-cube text-xl"></i>
+            <h1 class="font-bold text-lg">AI 3D Room Designer</h1>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="switchTab('screen-home')" class="text-white hover:text-indigo-200">
+                <i class="fa-solid fa-house text-lg"></i>
+            </button>
+            <button onclick="switchTab('screen-login')" class="bg-indigo-700 px-3 py-1 text-sm rounded-lg hover:bg-indigo-800">
+                <i class="fa-solid fa-user mr-1"></i> โปรไฟล์
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-md w-full mx-auto bg-white shadow-lg overflow-hidden flex flex-col relative">
+
+        <section id="screen-login" class="tab-content p-6 space-y-6">
+            <div class="text-center">
+                <h2 class="text-2xl font-bold text-gray-800">เข้าสู่ระบบ</h2>
+                <p class="text-sm text-gray-500">จัดการโครงการออกแบบห้อง 3D ของคุณ</p>
+            </div>
+            <form onsubmit="event.preventDefault(); switchTab('screen-home');" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">อีเมล / ชื่อผู้ใช้</label>
+                    <input type="text" required class="mt-1 w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">รหัสผ่าน</label>
+                    <input type="password" required class="mt-1 w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-md hover:bg-indigo-700 active:scale-95 transition">
+                    เข้าสู่ระบบ
+                </button>
+            </form>
+            <div class="text-center text-sm text-gray-600">
+                ยังไม่มีบัญชี? <a href="#" class="text-indigo-600 font-bold">สมัครสมาชิก</a>
+            </div>
+        </section>
+
+        <section id="screen-home" class="tab-content active p-4 space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold">สวัสดี, คุณนักออกแบบ</h2>
+                    <p class="text-xs text-gray-500">โครงการทั้งหมดของคุณอยู่ที่นี่</p>
+                </div>
+                <button onclick="switchTab('screen-create')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 shadow-md">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>สร้างห้องใหม่</span>
+                </button>
+            </div>
+
+            <div class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-4 rounded-2xl shadow-md flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>AI Design Assistant</h3>
+                    <p class="text-xs opacity-90 mt-1">ให้ AI ช่วยวางแผนและออกแบบห้องอัตโนมัติ</p>
+                </div>
+                <button onclick="switchTab('screen-editor'); toggleModal('modal-ai')" class="bg-white text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold shadow">
+                    ลองใช้ AI
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <h3 class="font-bold text-gray-700 text-sm">โปรเจกต์ล่าสุด / ที่บันทึกไว้</h3>
+                <div id="project-grid" class="grid grid-cols-2 gap-3">
+                    <div onclick="switchTab('screen-editor')" class="border rounded-xl p-2 cursor-pointer hover:shadow-md transition bg-gray-50">
+                        <div class="h-28 bg-gray-300 rounded-lg flex items-center justify-center text-gray-500">
+                            <i class="fa-solid fa-bed text-3xl"></i>
+                        </div>
+                        <h4 class="font-bold text-sm mt-2">Project 1 - Bedroom</h4>
+                        <p class="text-xs text-gray-500">แก้ไขล่าสุด: เมื่อวานนี้</p>
+                    </div>
+                    <div onclick="switchTab('screen-editor')" class="border rounded-xl p-2 cursor-pointer hover:shadow-md transition bg-gray-50">
+                        <div class="h-28 bg-gray-300 rounded-lg flex items-center justify-center text-gray-500">
+                            <i class="fa-solid fa-couch text-3xl"></i>
+                        </div>
+                        <h4 class="font-bold text-sm mt-2">Project 2 - Living Room</h4>
+                        <p class="text-xs text-gray-500">แก้ไขล่าสุด: 3 วันที่แล้ว</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-create" class="tab-content p-4 space-y-4">
+            <div class="flex items-center space-x-2">
+                <button onclick="switchTab('screen-home')" class="text-gray-500"><i class="fa-solid fa-arrow-left"></i></button>
+                <h2 class="text-lg font-bold text-gray-800">เลือกวิธีสร้างห้อง 3D</h2>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4">
+                <div onclick="switchTab('screen-scanner')" class="border-2 border-dashed border-indigo-400 bg-indigo-50 p-6 rounded-2xl text-center cursor-pointer hover:bg-indigo-100 transition">
+                    <i class="fa-solid fa-camera-retro text-4xl text-indigo-600 mb-2"></i>
+                    <h3 class="font-bold text-indigo-900">AI Room Scanner (ถ่าย/อัปโหลดรูป)</h3>
+                    <p class="text-xs text-indigo-700 mt-1">วิเคราะห์ ผนัง พื้น ประตู หน้าต่าง และเฟอร์นิเจอร์ จากรูปถ่ายโดยอัตโนมัติ</p>
+                </div>
+
+                <div onclick="startBlankRoom()" class="border p-6 rounded-2xl text-center cursor-pointer hover:bg-gray-50 transition">
+                    <i class="fa-solid fa-pen-ruler text-4xl text-gray-600 mb-2"></i>
+                    <h3 class="font-bold text-gray-800">สร้างห้องด้วยตัวเอง</h3>
+                    <p class="text-xs text-gray-500 mt-1">กำหนดขนาดห้อง ปล่อยห้องว่าง แล้วจัดวางเฟอร์นิเจอร์เอง</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-scanner" class="tab-content p-4 space-y-4">
+            <div class="flex items-center space-x-2">
+                <button onclick="switchTab('screen-create')" class="text-gray-500"><i class="fa-solid fa-arrow-left"></i></button>
+                <h2 class="text-lg font-bold">ถ่ายภาพ หรือ อัปโหลดรูปห้อง</h2>
+            </div>
+
+            <div class="border-2 border-gray-300 rounded-2xl p-8 text-center bg-gray-50 relative">
+                <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="processImageScan()">
+                <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-400 mb-2"></i>
+                <p class="text-sm font-medium text-gray-700">แตะเพื่อถ่ายรูป หรือ เลือกรูปภาพห้อง</p>
+                <p class="text-xs text-gray-400 mt-1">รองรับ JPG, PNG</p>
+            </div>
+
+            <div id="ai-analysis-box" class="hidden bg-white border rounded-xl p-4 space-y-2 shadow-sm">
+                <h4 id="ai-analysis-title" class="font-bold text-sm text-indigo-600 flex items-center">
+                    <i class="fa-solid fa-circle-notch animate-spin mr-2"></i> AI กำลังวิเคราะห์โครงสร้างห้อง...
+                </h4>
+                <ul class="text-xs text-gray-600 space-y-1">
+                    <li><i class="fa-solid fa-check text-green-500 mr-1"></i> ตรวจพบ ผนัง & พื้นห้อง</li>
+                    <li><i class="fa-solid fa-check text-green-500 mr-1"></i> ตรวจพบ ประตู และ หน้าต่าง</li>
+                    <li><i class="fa-solid fa-check text-green-500 mr-1"></i> ตรวจพบ เฟอร์นิเจอร์ (เตียง, โต๊ะ, ตู้)</li>
+                </ul>
+                <button id="ai-analysis-continue" onclick="switchTab('screen-editor')" class="hidden w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold text-sm mt-2">
+                    ไปที่ห้องที่สร้างขึ้น <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </section>
+
+        <section id="screen-editor" class="tab-content relative flex-grow flex flex-col">
+            <div class="bg-gray-800 text-white p-2 flex justify-between items-center text-xs">
+                <div class="flex space-x-2">
+                    <button onclick="switchTab('screen-home')" class="bg-gray-700 w-7 h-7 rounded flex items-center justify-center">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <button onclick="toggleModal('modal-styles')" class="bg-gray-700 px-2.5 py-1 rounded flex items-center">
+                        <i class="fa-solid fa-palette mr-1"></i> สไตล์ AI
+                    </button>
+                    <button onclick="toggleModal('modal-ai')" class="bg-purple-600 px-2.5 py-1 rounded flex items-center">
+                        <i class="fa-solid fa-robot mr-1"></i> คำสั่ง AI
+                    </button>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="toggleModal('modal-save')" class="bg-indigo-600 px-2.5 py-1 rounded">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> บันทึก
+                    </button>
+                    <button onclick="toggleModal('modal-export')" class="bg-green-600 px-2.5 py-1 rounded">
+                        <i class="fa-solid fa-share-nodes mr-1"></i> ส่งออก
+                    </button>
+                </div>
+            </div>
+
+            <div id="canvas-container">
+                <div class="absolute top-2 right-2 z-10 flex flex-col space-y-1.5">
+                    <button onclick="setCameraView('top')" class="bg-black/50 text-white w-8 h-8 rounded-lg text-xs flex items-center justify-center"><i class="fa-solid fa-border-all"></i></button>
+                    <button onclick="setCameraView('front')" class="bg-black/50 text-white w-8 h-8 rounded-lg text-xs flex items-center justify-center"><i class="fa-solid fa-camera"></i></button>
+                    <button onclick="deleteSelected()" class="bg-red-600/80 text-white w-8 h-8 rounded-lg text-xs flex items-center justify-center"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                <div id="empty-room-hint" class="absolute inset-0 flex items-center justify-center text-white/60 text-xs px-8 text-center pointer-events-none">
+                    แตะปุ่ม "สร้างห้องด้วยตัวเอง" หรือใช้ AI Scanner เพื่อเริ่มต้น
+                </div>
+            </div>
+
+            <div class="border-b flex text-xs font-bold text-center">
+                <button onclick="switchEditorTab('sub-room')" class="editor-tab-btn flex-1 py-2.5 border-b-2 border-indigo-600 text-indigo-600" data-sub="sub-room">ห้อง</button>
+                <button onclick="switchEditorTab('sub-furniture')" class="editor-tab-btn flex-1 py-2.5 border-b-2 border-transparent text-gray-500" data-sub="sub-furniture">เฟอร์นิเจอร์</button>
+                <button onclick="switchEditorTab('sub-objects')" class="editor-tab-btn flex-1 py-2.5 border-b-2 border-transparent text-gray-500" data-sub="sub-objects">รายการ</button>
+            </div>
+
+            <div class="flex-grow overflow-y-auto p-4">
+                <div id="sub-room" class="editor-subtab active space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-600 flex justify-between"><span>ความกว้าง</span><span id="val-width">4.0 ม.</span></label>
+                        <input type="range" id="room-width" min="2" max="8" step="0.1" value="4" class="w-full accent-indigo-600" oninput="updateRoomDims()">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-600 flex justify-between"><span>ความลึก</span><span id="val-depth">4.0 ม.</span></label>
+                        <input type="range" id="room-depth" min="2" max="8" step="0.1" value="4" class="w-full accent-indigo-600" oninput="updateRoomDims()">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-600 flex justify-between"><span>ความสูงฝ้าเพดาน</span><span id="val-height">2.7 ม.</span></label>
+                        <input type="range" id="room-height" min="2.2" max="3.5" step="0.1" value="2.7" class="w-full accent-indigo-600" oninput="updateRoomDims()">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 pt-1">
+                        <div>
+                            <label class="text-xs font-bold text-gray-600 block mb-1">สีผนัง</label>
+                            <input type="color" id="wall-color" value="#e9e5da" class="w-full h-9 rounded-lg border cursor-pointer" onchange="updateMaterials()">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-600 block mb-1">สีพื้น</label>
+                            <input type="color" id="floor-color" value="#c9a97a" class="w-full h-9 rounded-lg border cursor-pointer" onchange="updateMaterials()">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sub-furniture" class="editor-subtab space-y-3">
+                    <p class="text-xs text-gray-500">แตะเพื่อวางเฟอร์นิเจอร์ลงกลางห้อง แล้วลากปรับตำแหน่งได้ในแท็บ "รายการ"</p>
+                    <div class="grid grid-cols-3 gap-2" id="furniture-palette"></div>
+                </div>
+
+                <div id="sub-objects" class="editor-subtab space-y-3">
+                    <div id="object-list" class="space-y-2">
+                        <p class="text-xs text-gray-400 text-center py-4">ยังไม่มีเฟอร์นิเจอร์ในห้อง</p>
+                    </div>
+                    <div id="selected-controls" class="hidden border-t pt-3 space-y-3">
+                        <h4 class="text-xs font-bold text-gray-700">ปรับวัตถุที่เลือก: <span id="selected-name" class="text-indigo-600"></span></h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="rotateSelected()" class="bg-gray-100 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-rotate mr-1"></i> หมุน 45°</button>
+                            <button onclick="deleteSelected()" class="bg-red-50 text-red-600 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-trash mr-1"></i> ลบออก</button>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-600">ตำแหน่งซ้าย-ขวา (X)</label>
+                            <input type="range" id="pos-x" min="-3" max="3" step="0.05" class="w-full accent-indigo-600" oninput="moveSelected()">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-600">ตำแหน่งหน้า-หลัง (Z)</label>
+                            <input type="range" id="pos-z" min="-3" max="3" step="0.05" class="w-full accent-indigo-600" oninput="moveSelected()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="modal-ai" class="modal-overlay" onclick="closeIfOverlay(event,'modal-ai')">
+        <div class="modal-sheet p-5 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-robot text-purple-600 mr-2"></i>ผู้ช่วยออกแบบ AI</h3>
+                <button onclick="toggleModal('modal-ai')" class="text-gray-400"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-gray-500">อธิบายห้องในฝันของคุณ แล้วให้ AI จัดโทนสีและวางเฟอร์นิเจอร์ให้อัตโนมัติ</p>
+            <textarea id="ai-prompt" rows="3" placeholder="เช่น ห้องนอนสไตล์มินิมอลโทนไม้ ให้ความรู้สึกอบอุ่น" class="w-full border rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="fillPrompt('ห้องนอนสไตล์มินิมอล โทนสีขาว-ไม้ อบอุ่น')" class="bg-gray-100 text-xs px-3 py-1.5 rounded-full">มินิมอลโทนไม้</button>
+                <button onclick="fillPrompt('ห้องนั่งเล่นสแกนดิเนเวียน โทนสว่าง เรียบง่าย')" class="bg-gray-100 text-xs px-3 py-1.5 rounded-full">สแกนดิเนเวียน</button>
+                <button onclick="fillPrompt('ห้องหรูโทนเข้ม ทองและดำ')" class="bg-gray-100 text-xs px-3 py-1.5 rounded-full">หรูโทนเข้ม</button>
+                <button onclick="fillPrompt('ห้องปูนเปลือย สไตล์อินดัสเทรียล')" class="bg-gray-100 text-xs px-3 py-1.5 rounded-full">อินดัสเทรียล</button>
+            </div>
+            <button onclick="runAIDesign()" class="w-full bg-purple-600 text-white py-3 rounded-xl font-bold shadow-md active:scale-95 transition">
+                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> ให้ AI ออกแบบห้องนี้
+            </button>
+        </div>
+    </div>
+
+    <div id="modal-styles" class="modal-overlay" onclick="closeIfOverlay(event,'modal-styles')">
+        <div class="modal-sheet p-5 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-palette text-indigo-600 mr-2"></i>เลือกสไตล์สำเร็จรูป</h3>
+                <button onclick="toggleModal('modal-styles')" class="text-gray-400"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="grid grid-cols-2 gap-3" id="style-grid"></div>
+        </div>
+    </div>
+
+    <div id="modal-save" class="modal-overlay" onclick="closeIfOverlay(event,'modal-save')">
+        <div class="modal-sheet p-5 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-floppy-disk text-indigo-600 mr-2"></i>บันทึกโครงการ</h3>
+                <button onclick="toggleModal('modal-save')" class="text-gray-400"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-600 block mb-1">ชื่อโครงการ</label>
+                <input id="save-name" type="text" value="โปรเจกต์ห้องของฉัน" class="w-full border rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <button onclick="saveProject()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-md active:scale-95 transition">บันทึกลงเครื่องนี้</button>
+        </div>
+    </div>
+
+    <div id="modal-export" class="modal-overlay" onclick="closeIfOverlay(event,'modal-export')">
+        <div class="modal-sheet p-5 space-y-3">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-share-nodes text-green-600 mr-2"></i>ส่งออกผลงาน</h3>
+                <button onclick="toggleModal('modal-export')" class="text-gray-400"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <button onclick="exportImage()" class="w-full bg-gray-100 text-gray-800 py-3 rounded-xl font-bold flex items-center justify-center space-x-2"><i class="fa-solid fa-image"></i><span>บันทึกภาพห้อง (PNG)</span></button>
+            <button onclick="exportJSON()" class="w-full bg-gray-100 text-gray-800 py-3 rounded-xl font-bold flex items-center justify-center space-x-2"><i class="fa-solid fa-file-code"></i><span>ส่งออกข้อมูลห้อง (JSON)</span></button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+<script>
+// ---------- Tab / modal navigation ----------
+function switchTab(id){
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if(id === 'screen-editor'){
+        setTimeout(() => { if(renderer) onResize(); }, 50);
+    }
+}
+function switchEditorTab(id){
+    document.querySelectorAll('.editor-subtab').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.editor-tab-btn').forEach(b => {
+        const on = b.dataset.sub === id;
+        b.classList.toggle('border-indigo-600', on);
+        b.classList.toggle('text-indigo-600', on);
+        b.classList.toggle('border-transparent', !on);
+        b.classList.toggle('text-gray-500', !on);
+    });
+}
+function toggleModal(id){
+    document.getElementById(id).classList.toggle('open');
+}
+function closeIfOverlay(e, id){
+    if(e.target.id === id) toggleModal(id);
+}
+function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ---------- Scanner simulation ----------
+function processImageScan(){
+    const box = document.getElementById('ai-analysis-box');
+    const title = document.getElementById('ai-analysis-title');
+    const btn = document.getElementById('ai-analysis-continue');
+    box.classList.remove('hidden');
+    title.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin mr-2"></i> AI กำลังวิเคราะห์โครงสร้างห้อง...';
+    btn.classList.add('hidden');
+    setTimeout(() => {
+        title.innerHTML = '<i class="fa-solid fa-circle-check mr-2 text-green-500"></i> วิเคราะห์เสร็จสิ้น สร้างห้อง 3D แล้ว';
+        btn.classList.remove('hidden');
+        startBlankRoom();
+    }, 1800);
+}
+function startBlankRoom(){
+    switchTab('screen-editor');
+    if(!roomGroup) buildRoom();
+}
+
+// ---------- Three.js setup ----------
+let scene, camera, renderer, controls, raycaster, pointer;
+let roomGroup, floorMesh, wallMeshes = [];
+let furnitureObjects = [];
+let selectedObject = null;
+let objIdCounter = 1;
+
+const FURNITURE_TYPES = [
+    { type:'bed', label:'เตียง', icon:'fa-bed', color:0xffffff, size:[1.6,0.5,2.0] },
+    { type:'sofa', label:'โซฟา', icon:'fa-couch', color:0x8b8378, size:[1.8,0.8,0.85] },
+    { type:'table', label:'โต๊ะ', icon:'fa-table', color:0x8b5e3c, size:[1.0,0.4,0.6] },
+    { type:'chair', label:'เก้าอี้', icon:'fa-chair', color:0x5b4636, size:[0.45,0.9,0.45] },
+    { type:'wardrobe', label:'ตู้เสื้อผ้า', icon:'fa-box-archive', color:0x6b5b4a, size:[1.0,2.0,0.6] },
+    { type:'tv', label:'ตู้ทีวี', icon:'fa-tv', color:0x2f2f2f, size:[1.3,0.5,0.4] },
+    { type:'plant', label:'ต้นไม้', icon:'fa-seedling', color:0x3f7d3a, size:[0.4,0.9,0.4] },
+    { type:'lamp', label:'โคมไฟ', icon:'fa-lightbulb', color:0xf2e6a8, size:[0.3,1.4,0.3] },
+    { type:'desk', label:'โต๊ะทำงาน', icon:'fa-laptop', color:0x9c7a4f, size:[1.2,0.75,0.55] }
+];
+
+function initThree(){
+    const container = document.getElementById('canvas-container');
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a1a1a);
+
+    camera = new THREE.PerspectiveCamera(50, container.clientWidth/container.clientHeight, 0.1, 100);
+    camera.position.set(4, 4, 6);
+
+    renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.target.set(0,1,0);
+    controls.enableDamping = true;
+    controls.maxPolarAngle = Math.PI/2 - 0.02;
+
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x666666, 1.0);
+    scene.add(hemi);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+    dir.position.set(5,8,4);
+    scene.add(dir);
+
+    raycaster = new THREE.Raycaster();
+    pointer = new THREE.Vector2();
+    renderer.domElement.addEventListener('pointerdown', onCanvasClick);
+    window.addEventListener('resize', onResize);
+
+    animate();
+}
+function onResize(){
+    const container = document.getElementById('canvas-container');
+    camera.aspect = container.clientWidth/container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+}
+function animate(){
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+}
+
+function buildRoom(){
+    if(!scene) initThree();
+    document.getElementById('empty-room-hint').style.display = 'none';
+    if(roomGroup) scene.remove(roomGroup);
+    roomGroup = new THREE.Group();
+    scene.add(roomGroup);
+    wallMeshes = [];
+
+    const w = parseFloat(document.getElementById('room-width').value);
+    const d = parseFloat(document.getElementById('room-depth').value);
+    const h = parseFloat(document.getElementById('room-height').value);
+    const wallColor = document.getElementById('wall-color').value;
+    const floorColor = document.getElementById('floor-color').value;
+
+    const floorGeo = new THREE.PlaneGeometry(w, d);
+    const floorMat = new THREE.MeshStandardMaterial({ color: floorColor, side: THREE.DoubleSide });
+    floorMesh = new THREE.Mesh(floorGeo, floorMat);
+    floorMesh.rotation.x = -Math.PI/2;
+    roomGroup.add(floorMesh);
+
+    const wallMat = new THREE.MeshStandardMaterial({ color: wallColor, side: THREE.DoubleSide });
+    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wallMat);
+    backWall.position.set(0, h/2, -d/2);
+    roomGroup.add(backWall); wallMeshes.push(backWall);
+
+    const sideWallMat = wallMat.clone();
+    const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(d, h), sideWallMat);
+    leftWall.rotation.y = Math.PI/2;
+    leftWall.position.set(-w/2, h/2, 0);
+    roomGroup.add(leftWall); wallMeshes.push(leftWall);
+
+    const rightWallMat = wallMat.clone();
+    const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(d, h), rightWallMat);
+    rightWall.rotation.y = -Math.PI/2;
+    rightWall.position.set(w/2, h/2, 0);
+    roomGroup.add(rightWall); wallMeshes.push(rightWall);
+
+    const grid = new THREE.GridHelper(Math.max(w,d)+1, Math.round(Math.max(w,d)+1), 0x999999, 0x444444);
+    grid.position.y = 0.001;
+    roomGroup.add(grid);
+
+    controls.target.set(0, h/2, 0);
+}
+
+function updateRoomDims(){
+    document.getElementById('val-width').textContent = parseFloat(document.getElementById('room-width').value).toFixed(1) + ' ม.';
+    document.getElementById('val-depth').textContent = parseFloat(document.getElementById('room-depth').value).toFixed(1) + ' ม.';
+    document.getElementById('val-height').textContent = parseFloat(document.getElementById('room-height').value).toFixed(1) + ' ม.';
+    buildRoom();
+    reAddFurnitureAfterRebuild();
+}
+function reAddFurnitureAfterRebuild(){
+    furnitureObjects.forEach(obj => roomGroup.add(obj.mesh));
+}
+function updateMaterials(){
+    if(!roomGroup) return;
+    const wallColor = document.getElementById('wall-color').value;
+    const floorColor = document.getElementById('floor-color').value;
+    floorMesh.material.color.set(floorColor);
+    wallMeshes.forEach(m => m.material.color.set(wallColor));
+}
+
+function makeFurnitureMesh(def){
+    const group = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color: def.color });
+    const geo = new THREE.BoxGeometry(def.size[0], def.size[1], def.size[2]);
+    const box = new THREE.Mesh(geo, mat);
+    box.position.y = def.size[1]/2;
+    group.add(box);
+    group.userData.type = def.type;
+    group.userData.label = def.label;
+    return group;
+}
+
+function addFurniture(type){
+    if(!roomGroup) buildRoom();
+    const def = FURNITURE_TYPES.find(f => f.type === type);
+    const mesh = makeFurnitureMesh(def);
+    mesh.position.set((Math.random()-0.5)*1.2, 0, (Math.random()-0.5)*1.2);
+    roomGroup.add(mesh);
+    const id = 'obj_' + (objIdCounter++);
+    furnitureObjects.push({ id, type, label: def.label, mesh });
+    mesh.userData.objId = id;
+    refreshObjectList();
+    selectObjectById(id);
+    switchEditorTab('sub-objects');
+    document.querySelector('[data-sub="sub-objects"]').click();
+    showToast(def.label + ' ถูกวางในห้องแล้ว');
+}
+
+function buildFurniturePalette(){
+    const wrap = document.getElementById('furniture-palette');
+    wrap.innerHTML = '';
+    FURNITURE_TYPES.forEach(def => {
+        const btn = document.createElement('button');
+        btn.className = 'furn-btn bg-gray-50 border rounded-xl p-3 flex flex-col items-center space-y-1 hover:bg-indigo-50 transition';
+        btn.innerHTML = `<i class="fa-solid ${def.icon} text-xl text-indigo-600"></i><span class="text-[11px] font-bold text-gray-700">${def.label}</span>`;
+        btn.onclick = () => addFurniture(def.type);
+        wrap.appendChild(btn);
+    });
+}
+
+function refreshObjectList(){
+    const list = document.getElementById('object-list');
+    if(furnitureObjects.length === 0){
+        list.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ยังไม่มีเฟอร์นิเจอร์ในห้อง</p>';
+        return;
+    }
+    list.innerHTML = '';
+    furnitureObjects.forEach(obj => {
+        const row = document.createElement('div');
+        row.className = 'obj-row flex items-center justify-between border rounded-lg px-3 py-2 cursor-pointer' + (selectedObject && selectedObject.id === obj.id ? ' active' : '');
+        row.innerHTML = `<span class="text-xs font-bold text-gray-700">${obj.label}</span><i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>`;
+        row.onclick = () => selectObjectById(obj.id);
+        list.appendChild(row);
+    });
+}
+
+function selectObjectById(id){
+    const obj = furnitureObjects.find(o => o.id === id);
+    if(!obj) return;
+    selectedObject = obj;
+    document.getElementById('selected-controls').classList.remove('hidden');
+    document.getElementById('selected-name').textContent = obj.label;
+    document.getElementById('pos-x').value = obj.mesh.position.x;
+    document.getElementById('pos-z').value = obj.mesh.position.z;
+    refreshObjectList();
+}
+
+function onCanvasClick(event){
+    if(!roomGroup || furnitureObjects.length === 0) return;
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((event.clientX - rect.left)/rect.width)*2 - 1;
+    pointer.y = -((event.clientY - rect.top)/rect.height)*2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    const meshes = furnitureObjects.map(o => o.mesh);
+    const hits = raycaster.intersectObjects(meshes, true);
+    if(hits.length){
+        let g = hits[0].object;
+        while(g.parent && !g.userData.objId) g = g.parent;
+        if(g.userData.objId) selectObjectById(g.userData.objId);
+    }
+}
+
+function moveSelected(){
+    if(!selectedObject) return;
+    selectedObject.mesh.position.x = parseFloat(document.getElementById('pos-x').value);
+    selectedObject.mesh.position.z = parseFloat(document.getElementById('pos-z').value);
+}
+function rotateSelected(){
+    if(!selectedObject) return;
+    selectedObject.mesh.rotation.y += Math.PI/4;
+}
+function deleteSelected(){
+    if(!selectedObject) return;
+    roomGroup.remove(selectedObject.mesh);
+    furnitureObjects = furnitureObjects.filter(o => o.id !== selectedObject.id);
+    selectedObject = null;
+    document.getElementById('selected-controls').classList.add('hidden');
+    refreshObjectList();
+    showToast('ลบเฟอร์นิเจอร์แล้ว');
+}
+
+function setCameraView(mode){
+    if(!roomGroup) return;
+    const w = parseFloat(document.getElementById('room-width').value);
+    const d = parseFloat(document.getElementById('room-depth').value);
+    if(mode === 'top'){
+        camera.position.set(0, Math.max(w,d)*1.6, 0.01);
+    } else {
+        camera.position.set(Math.max(w,d)*0.9, 1.6, Math.max(w,d)*0.9);
+    }
+    controls.update();
+}
+
+// ---------- Style presets ----------
+const STYLES = [
+    { name:'มินิมอล', wall:'#f1efe9', floor:'#d9c9a8', furniture:['bed','wardrobe','lamp'] },
+    { name:'สแกนดิเนเวียน', wall:'#f7f5f0', floor:'#e6d3ae', furniture:['sofa','table','plant'] },
+    { name:'หรูโทนเข้ม', wall:'#2b2b2e', floor:'#3d3327', furniture:['sofa','tv','lamp'] },
+    { name:'อินดัสเทรียล', wall:'#8a8f94', floor:'#5b5b5b', furniture:['desk','chair','plant'] },
+    { name:'ญี่ปุ่น (Japandi)', wall:'#e7e0d3', floor:'#b89468', furniture:['bed','table','plant'] },
+    { name:'วินเทจ', wall:'#e3cdb0', floor:'#7a4f30', furniture:['sofa','table','wardrobe'] }
+];
+function buildStyleGrid(){
+    const grid = document.getElementById('style-grid');
+    grid.innerHTML = '';
+    STYLES.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'style-card border rounded-xl p-3 cursor-pointer';
+        card.innerHTML = `
+            <div class="flex space-x-1 mb-2">
+                <div class="w-1/2 h-8 rounded" style="background:${s.wall}"></div>
+                <div class="w-1/2 h-8 rounded" style="background:${s.floor}"></div>
+            </div>
+            <p class="text-xs font-bold text-gray-700">${s.name}</p>`;
+        card.onclick = () => applyStyle(s);
+        grid.appendChild(card);
+    });
+}
+function applyStyle(style){
+    if(!roomGroup) buildRoom();
+    document.getElementById('wall-color').value = style.wall;
+    document.getElementById('floor-color').value = style.floor;
+    updateMaterials();
+    furnitureObjects.forEach(o => roomGroup.remove(o.mesh));
+    furnitureObjects = [];
+    style.furniture.forEach((type, i) => {
+        const def = FURNITURE_TYPES.find(f => f.type === type);
+        const mesh = makeFurnitureMesh(def);
+        const w = parseFloat(document.getElementById('room-width').value);
+        const d = parseFloat(document.getElementById('room-depth').value);
+        mesh.position.set((i - (style.furniture.length-1)/2) * Math.min(1.4, w/(style.furniture.length+1)), 0, d/2 - 1);
+        roomGroup.add(mesh);
+        const id = 'obj_' + (objIdCounter++);
+        mesh.userData.objId = id;
+        furnitureObjects.push({ id, type, label: def.label, mesh });
+    });
+    refreshObjectList();
+    toggleModal('modal-styles');
+    showToast('ใช้สไตล์ "' + style.name + '" แล้ว');
+}
+
+// ---------- AI prompt (rule-based) ----------
+function fillPrompt(text){
+    document.getElementById('ai-prompt').value = text;
+}
+function runAIDesign(){
+    const text = document.getElementById('ai-prompt').value.trim();
+    if(!text){ showToast('กรุณาอธิบายห้องที่ต้องการก่อน'); return; }
+    const t = text.toLowerCase();
+    let style;
+    if(t.includes('หรู') || t.includes('เข้ม') || t.includes('ทอง')) style = STYLES[2];
+    else if(t.includes('สแกน') || t.includes('scandi')) style = STYLES[1];
+    else if(t.includes('ปูน') || t.includes('อินดัส') || t.includes('industrial')) style = STYLES[3];
+    else if(t.includes('ญี่ปุ่น') || t.includes('japandi') || t.includes('เซน')) style = STYLES[4];
+    else if(t.includes('วินเทจ') || t.includes('vintage')) style = STYLES[5];
+    else style = STYLES[0];
+
+    if(t.includes('นั่งเล่น') || t.includes('รับแขก')) style = {...style, furniture:['sofa','table','tv','plant']};
+    else if(t.includes('นอน')) style = {...style, furniture:['bed','wardrobe','lamp']};
+    else if(t.includes('ทำงาน') || t.includes('ออฟฟิศ')) style = {...style, furniture:['desk','chair','plant']};
+
+    toggleModal('modal-ai');
+    applyStyle(style);
+    showToast('AI ออกแบบห้องตามคำสั่งของคุณเรียบร้อย');
+}
+
+// ---------- Save / export ----------
+function serializeRoom(){
+    return {
+        width: parseFloat(document.getElementById('room-width').value),
+        depth: parseFloat(document.getElementById('room-depth').value),
+        height: parseFloat(document.getElementById('room-height').value),
+        wallColor: document.getElementById('wall-color').value,
+        floorColor: document.getElementById('floor-color').value,
+        furniture: furnitureObjects.map(o => ({
+            type: o.type,
+            x: o.mesh.position.x, y: o.mesh.position.y, z: o.mesh.position.z,
+            rotationY: o.mesh.rotation.y
+        }))
+    };
+}
+function saveProject(){
+    const name = document.getElementById('save-name').value.trim() || 'โปรเจกต์ไม่มีชื่อ';
+    const data = serializeRoom();
+    try{
+        const key = 'room_project_' + Date.now();
+        localStorage.setItem(key, JSON.stringify({ name, data, savedAt: new Date().toISOString() }));
+        showToast('บันทึกโครงการ "' + name + '" แล้ว');
+    }catch(e){
+        showToast('ไม่สามารถบันทึกได้ในอุปกรณ์นี้');
+    }
+    toggleModal('modal-save');
+}
+function exportImage(){
+    if(!renderer){ showToast('ยังไม่มีห้องให้ส่งออก'); return; }
+    renderer.render(scene, camera);
+    const link = document.createElement('a');
+    link.download = 'room-design.png';
+    link.href = renderer.domElement.toDataURL('image/png');
+    link.click();
+    toggleModal('modal-export');
+}
+function exportJSON(){
+    const data = serializeRoom();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+    const link = document.createElement('a');
+    link.download = 'room-design.json';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    toggleModal('modal-export');
+}
+
+// ---------- Init ----------
+buildFurniturePalette();
+buildStyleGrid();
+document.querySelectorAll('.editor-tab-btn')[2].addEventListener('click', () => switchEditorTab('sub-objects'));
+document.querySelectorAll('.editor-tab-btn')[1].addEventListener('click', () => switchEditorTab('sub-furniture'));
+document.querySelectorAll('.editor-tab-btn')[0].addEventListener('click', () => switchEditorTab('sub-room'));
+</script>
+</body>
+</html>
