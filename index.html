@@ -1,734 +1,1587 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI 3D Room Designer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; touch-action: manipulation; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        #canvas-container { width: 100%; height: 50vh; background-color: #1a1a1a; position: relative; }
-        @media (min-height: 700px) { #canvas-container { height: 55vh; } }
-        .editor-subtab { display: none; }
-        .editor-subtab.active { display: block; }
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center; }
-        .modal-overlay.open { display: flex; }
-        .modal-sheet { background: white; width: 100%; max-width: 28rem; border-radius: 1.25rem 1.25rem 0 0; max-height: 85vh; overflow-y: auto; animation: slideUp 0.25s ease-out; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .style-card.selected { outline: 2px solid #4f46e5; outline-offset: -2px; }
-        .furn-btn:active { transform: scale(0.95); }
-        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 0.6rem 1.2rem; border-radius: 999px; font-size: 0.8rem; z-index: 200; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; }
-        .toast.show { opacity: 1; transform: translateX(-50%) translateY(-8px); }
-        ::-webkit-scrollbar { height: 4px; width: 4px; }
-        .obj-row.active { background-color: #eef2ff; border-color: #6366f1; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>โรงไม้ | แพลตฟอร์มเฟอร์นิเจอร์ &amp; โลจิสติกส์</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4EEE3;
+    --paper:#FFFFFF;
+    --ink:#26221B;
+    --ink-soft:#6E6656;
+    --primary:#2E4A3A;
+    --primary-dark:#1D3126;
+    --accent:#C1701F;
+    --accent-soft:#F0DAB8;
+    --line:#E3DACA;
+    --success:#3D7A55;
+    --success-soft:#DEEEE1;
+    --warn:#B3862B;
+    --warn-soft:#F6E9C9;
+    --danger:#AB4432;
+    --danger-soft:#F5DFD8;
+    --info:#3C6B8C;
+    --info-soft:#DCE9F1;
+  }
+  *{-webkit-tap-highlight-color:transparent;}
+  html,body{background:#DCD4C2;}
+  body{font-family:'Sarabun',sans-serif;color:var(--ink);}
+  .font-display{font-family:'Prompt',sans-serif;}
+  #phone{
+    width:430px;max-width:100vw;height:100vh;max-height:932px;
+    background:var(--bg);position:relative;overflow:hidden;
+    margin:0 auto;box-shadow:0 30px 60px -20px rgba(0,0,0,.4);
+  }
+  @media(min-width:460px){
+    body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 0;}
+    #phone{border-radius:38px;border:10px solid #17140F;height:900px;}
+  }
+  #content{position:absolute;top:64px;bottom:78px;left:0;right:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  #content.no-nav{bottom:0;}
+  #content.no-header{top:0;}
+  ::-webkit-scrollbar{width:0;height:0;}
+  .tab-btn{transition:color .15s ease, transform .1s ease;}
+  .tab-btn:active{transform:scale(.94);}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:16px;}
+  .chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:active{background:var(--primary-dark);}
+  .btn-accent{background:var(--accent);color:#fff;}
+  .stepper-line{position:absolute;left:11px;top:24px;bottom:-8px;width:2px;background:var(--line);}
+  .modal-backdrop{position:absolute;inset:0;background:rgba(23,20,15,.5);z-index:40;display:flex;align-items:flex-end;}
+  .modal-sheet{background:var(--bg);width:100%;max-height:88%;overflow-y:auto;border-radius:22px 22px 0 0;animation:slideUp .22s ease;}
+  @keyframes slideUp{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .toast{animation:toastIn .2s ease;}
+  @keyframes toastIn{from{transform:translateY(-14px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  input,select,textarea{font-family:'Sarabun',sans-serif;}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--primary);outline-offset:1px;}
+  .scrollbar-x::-webkit-scrollbar{display:none;}
+  .bar-wrap{display:flex;align-items:flex-end;gap:8px;height:120px;}
+  .bar{flex:1;background:var(--primary);border-radius:6px 6px 0 0;position:relative;min-height:4px;}
+  .bar.today{background:var(--accent);}
+  #ar-overlay{z-index:45;}
+</style>
 </head>
-<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+<body>
 
-    <header class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md sticky top-0 z-50">
-        <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-cube text-xl"></i>
-            <h1 class="font-bold text-lg">AI 3D Room Designer</h1>
-        </div>
-        <div class="flex items-center space-x-3">
-            <button onclick="switchTab('screen-home')" class="text-white hover:text-indigo-200">
-                <i class="fa-solid fa-house text-lg"></i>
-            </button>
-            <button onclick="switchTab('screen-login')" class="bg-indigo-700 px-3 py-1 text-sm rounded-lg hover:bg-indigo-800">
-                <i class="fa-solid fa-user mr-1"></i> โปรไฟล์
-            </button>
-        </div>
-    </header>
+<div id="phone">
+  <!-- Header -->
+  <div id="header" class="absolute top-0 left-0 right-0 h-16 bg-[var(--primary)] text-white flex items-center justify-between px-4 z-20"></div>
 
-    <main class="flex-grow max-w-md w-full mx-auto bg-white shadow-lg overflow-hidden flex flex-col relative">
+  <!-- Main content -->
+  <div id="content"></div>
 
-        <section id="screen-login" class="tab-content p-6 space-y-6">
-            <div class="text-center">
-                <h2 class="text-2xl font-bold text-gray-800">เข้าสู่ระบบ</h2>
-                <p class="text-sm text-gray-500">จัดการโครงการออกแบบห้อง 3D ของคุณ</p>
-            </div>
-            <form onsubmit="event.preventDefault(); switchTab('screen-home');" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">อีเมล / ชื่อผู้ใช้</label>
-                    <input type="text" required class="mt-1 w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">รหัสผ่าน</label>
-                    <input type="password" required class="mt-1 w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-md hover:bg-indigo-700 active:scale-95 transition">
-                    เข้าสู่ระบบ
-                </button>
-            </form>
-            <div class="text-center text-sm text-gray-600">
-                ยังไม่มีบัญชี? <a href="#" class="text-indigo-600 font-bold">สมัครสมาชิก</a>
-            </div>
-        </section>
+  <!-- Bottom nav -->
+  <div id="bottomnav" class="absolute bottom-0 left-0 right-0 bg-[var(--paper)] border-t border-[var(--line)] z-20"></div>
 
-        <section id="screen-home" class="tab-content active p-4 space-y-6">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="text-xl font-bold">สวัสดี, คุณนักออกแบบ</h2>
-                    <p class="text-xs text-gray-500">โครงการทั้งหมดของคุณอยู่ที่นี่</p>
-                </div>
-                <button onclick="switchTab('screen-create')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 shadow-md">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>สร้างห้องใหม่</span>
-                </button>
-            </div>
+  <!-- AR full-screen overlay -->
+  <div id="ar-overlay" class="absolute inset-0 hidden"></div>
 
-            <div class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-4 rounded-2xl shadow-md flex justify-between items-center">
-                <div>
-                    <h3 class="font-bold"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>AI Design Assistant</h3>
-                    <p class="text-xs opacity-90 mt-1">ให้ AI ช่วยวางแผนและออกแบบห้องอัตโนมัติ</p>
-                </div>
-                <button onclick="switchTab('screen-editor'); toggleModal('modal-ai')" class="bg-white text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold shadow">
-                    ลองใช้ AI
-                </button>
-            </div>
+  <!-- Modal root -->
+  <div id="modal-root"></div>
 
-            <div class="space-y-3">
-                <h3 class="font-bold text-gray-700 text-sm">โปรเจกต์ล่าสุด / ที่บันทึกไว้</h3>
-                <div id="project-grid" class="grid grid-cols-2 gap-3">
-                    <div onclick="switchTab('screen-editor')" class="border rounded-xl p-2 cursor-pointer hover:shadow-md transition bg-gray-50">
-                        <div class="h-28 bg-gray-300 rounded-lg flex items-center justify-center text-gray-500">
-                            <i class="fa-solid fa-bed text-3xl"></i>
-                        </div>
-                        <h4 class="font-bold text-sm mt-2">Project 1 - Bedroom</h4>
-                        <p class="text-xs text-gray-500">แก้ไขล่าสุด: เมื่อวานนี้</p>
-                    </div>
-                    <div onclick="switchTab('screen-editor')" class="border rounded-xl p-2 cursor-pointer hover:shadow-md transition bg-gray-50">
-                        <div class="h-28 bg-gray-300 rounded-lg flex items-center justify-center text-gray-500">
-                            <i class="fa-solid fa-couch text-3xl"></i>
-                        </div>
-                        <h4 class="font-bold text-sm mt-2">Project 2 - Living Room</h4>
-                        <p class="text-xs text-gray-500">แก้ไขล่าสุด: 3 วันที่แล้ว</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="screen-create" class="tab-content p-4 space-y-4">
-            <div class="flex items-center space-x-2">
-                <button onclick="switchTab('screen-home')" class="text-gray-500"><i class="fa-solid fa-arrow-left"></i></button>
-                <h2 class="text-lg font-bold text-gray-800">เลือกวิธีสร้างห้อง 3D</h2>
-            </div>
-
-            <div class="grid grid-cols-1 gap-4">
-                <div onclick="switchTab('screen-scanner')" class="border-2 border-dashed border-indigo-400 bg-indigo-50 p-6 rounded-2xl text-center cursor-pointer hover:bg-indigo-100 transition">
-                    <i class="fa-solid fa-camera-retro text-4xl text-indigo-600 mb-2"></i>
-                    <h3 class="font-bold text-indigo-900">AI Room Scanner (ถ่าย/อัปโหลดรูป)</h3>
-                    <p class="text-xs text-indigo-700 mt-1">วิเคราะห์ ผนัง พื้น ประตู หน้าต่าง และเฟอร์นิเจอร์ จากรูปถ่ายโดยอัตโนมัติ</p>
-                </div>
-
-                <div onclick="startBlankRoom()" class="border p-6 rounded-2xl text-center cursor-pointer hover:bg-gray-50 transition">
-                    <i class="fa-solid fa-pen-ruler text-4xl text-gray-600 mb-2"></i>
-                    <h3 class="font-bold text-gray-800">สร้างห้องด้วยตัวเอง</h3>
-                    <p class="text-xs text-gray-500 mt-1">กำหนดขนาดห้อง ปล่อยห้องว่าง แล้วจัดวางเฟอร์นิเจอร์เอง</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="screen-scanner" class="tab-content p-4 space-y-4">
-            <div class="flex items-center space-x-2">
-                <button onclick="switchTab('screen-create')" class="text-gray-500"><i class="fa-solid fa-arrow-left"></i></button>
-                <h2 class="text-lg font-bold">ถ่ายภาพ หรือ อัปโหลดรูปห้อง</h2>
-            </div>
-
-            <div class="border-2 border-gray-300 rounded-2xl p-8 text-center bg-gray-50 relative">
-                <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="processImageScan()">
-                <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-400 mb-2"></i>
-                <p class="text-sm font-medium text-gray-700">แตะเพื่อถ่ายรูป หรือ เลือกรูปภาพห้อง</p>
-                <p class="text-xs text-gray-400 mt-1">รองรับ JPG, PNG</p>
-            </div>
-
-            <div id="ai-analysis-box" class="hidden bg-white border rounded-xl p-4 space-y-2 shadow-sm">
-                <h4 id="ai-analysis-title" class="font-bold text-sm text-indigo-600 flex items-center">
-                    <i class="fa-solid fa-circle-notch animate-spin mr-2"></i> AI กำลังวิเคราะห์โครงสร้างห้อง...
-                </h4>
-                <ul class="text-xs text-gray-600 space-y-1">
-                    <li><i class="fa-solid fa-check text-green-500 mr-1"></i> ตรวจพบ ผนัง & พื้นห้อง</li>
-                    <li><i class="fa-solid fa-check text-green-500 mr-1"></i> ตรวจพบ ประตู และ หน้าต่าง</li>
-                    <li><i class="fa-solid fa-check text-green-500 mr-1"></i> ตรวจพบ เฟอร์นิเจอร์ (เตียง, โต๊ะ, ตู้)</li>
-                </ul>
-                <button id="ai-analysis-continue" onclick="switchTab('screen-editor')" class="hidden w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold text-sm mt-2">
-                    ไปที่ห้องที่สร้างขึ้น <i class="fa-solid fa-arrow-right ml-1"></i>
-                </button>
-            </div>
-        </section>
-
-        <section id="screen-editor" class="tab-content relative flex-grow flex flex-col">
-            <div class="bg-gray-800 text-white p-2 flex justify-between items-center text-xs">
-                <div class="flex space-x-2">
-                    <button onclick="switchTab('screen-home')" class="bg-gray-700 w-7 h-7 rounded flex items-center justify-center">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </button>
-                    <button onclick="toggleModal('modal-styles')" class="bg-gray-700 px-2.5 py-1 rounded flex items-center">
-                        <i class="fa-solid fa-palette mr-1"></i> สไตล์ AI
-                    </button>
-                    <button onclick="toggleModal('modal-ai')" class="bg-purple-600 px-2.5 py-1 rounded flex items-center">
-                        <i class="fa-solid fa-robot mr-1"></i> คำสั่ง AI
-                    </button>
-                </div>
-                <div class="flex space-x-2">
-                    <button onclick="toggleModal('modal-save')" class="bg-indigo-600 px-2.5 py-1 rounded">
-                        <i class="fa-solid fa-floppy-disk mr-1"></i> บันทึก
-                    </button>
-                    <button onclick="toggleModal('modal-export')" class="bg-green-600 px-2.5 py-1 rounded">
-                        <i class="fa-solid fa-share-nodes mr-1"></i> ส่งออก
-                    </button>
-                </div>
-            </div>
-
-            <div id="canvas-container">
-                <div class="absolute top-2 right-2 z-10 flex flex-col space-y-1.5">
-                    <button onclick="setCameraView('top')" class="bg-black/50 text-white w-8 h-8 rounded-lg text-xs flex items-center justify-center"><i class="fa-solid fa-border-all"></i></button>
-                    <button onclick="setCameraView('front')" class="bg-black/50 text-white w-8 h-8 rounded-lg text-xs flex items-center justify-center"><i class="fa-solid fa-camera"></i></button>
-                    <button onclick="deleteSelected()" class="bg-red-600/80 text-white w-8 h-8 rounded-lg text-xs flex items-center justify-center"><i class="fa-solid fa-trash"></i></button>
-                </div>
-                <div id="empty-room-hint" class="absolute inset-0 flex items-center justify-center text-white/60 text-xs px-8 text-center pointer-events-none">
-                    แตะปุ่ม "สร้างห้องด้วยตัวเอง" หรือใช้ AI Scanner เพื่อเริ่มต้น
-                </div>
-            </div>
-
-            <div class="border-b flex text-xs font-bold text-center">
-                <button onclick="switchEditorTab('sub-room')" class="editor-tab-btn flex-1 py-2.5 border-b-2 border-indigo-600 text-indigo-600" data-sub="sub-room">ห้อง</button>
-                <button onclick="switchEditorTab('sub-furniture')" class="editor-tab-btn flex-1 py-2.5 border-b-2 border-transparent text-gray-500" data-sub="sub-furniture">เฟอร์นิเจอร์</button>
-                <button onclick="switchEditorTab('sub-objects')" class="editor-tab-btn flex-1 py-2.5 border-b-2 border-transparent text-gray-500" data-sub="sub-objects">รายการ</button>
-            </div>
-
-            <div class="flex-grow overflow-y-auto p-4">
-                <div id="sub-room" class="editor-subtab active space-y-4">
-                    <div>
-                        <label class="text-xs font-bold text-gray-600 flex justify-between"><span>ความกว้าง</span><span id="val-width">4.0 ม.</span></label>
-                        <input type="range" id="room-width" min="2" max="8" step="0.1" value="4" class="w-full accent-indigo-600" oninput="updateRoomDims()">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-600 flex justify-between"><span>ความลึก</span><span id="val-depth">4.0 ม.</span></label>
-                        <input type="range" id="room-depth" min="2" max="8" step="0.1" value="4" class="w-full accent-indigo-600" oninput="updateRoomDims()">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-600 flex justify-between"><span>ความสูงฝ้าเพดาน</span><span id="val-height">2.7 ม.</span></label>
-                        <input type="range" id="room-height" min="2.2" max="3.5" step="0.1" value="2.7" class="w-full accent-indigo-600" oninput="updateRoomDims()">
-                    </div>
-                    <div class="grid grid-cols-2 gap-3 pt-1">
-                        <div>
-                            <label class="text-xs font-bold text-gray-600 block mb-1">สีผนัง</label>
-                            <input type="color" id="wall-color" value="#e9e5da" class="w-full h-9 rounded-lg border cursor-pointer" onchange="updateMaterials()">
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold text-gray-600 block mb-1">สีพื้น</label>
-                            <input type="color" id="floor-color" value="#c9a97a" class="w-full h-9 rounded-lg border cursor-pointer" onchange="updateMaterials()">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="sub-furniture" class="editor-subtab space-y-3">
-                    <p class="text-xs text-gray-500">แตะเพื่อวางเฟอร์นิเจอร์ลงกลางห้อง แล้วลากปรับตำแหน่งได้ในแท็บ "รายการ"</p>
-                    <div class="grid grid-cols-3 gap-2" id="furniture-palette"></div>
-                </div>
-
-                <div id="sub-objects" class="editor-subtab space-y-3">
-                    <div id="object-list" class="space-y-2">
-                        <p class="text-xs text-gray-400 text-center py-4">ยังไม่มีเฟอร์นิเจอร์ในห้อง</p>
-                    </div>
-                    <div id="selected-controls" class="hidden border-t pt-3 space-y-3">
-                        <h4 class="text-xs font-bold text-gray-700">ปรับวัตถุที่เลือก: <span id="selected-name" class="text-indigo-600"></span></h4>
-                        <div class="grid grid-cols-2 gap-3">
-                            <button onclick="rotateSelected()" class="bg-gray-100 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-rotate mr-1"></i> หมุน 45°</button>
-                            <button onclick="deleteSelected()" class="bg-red-50 text-red-600 py-2 rounded-lg text-xs font-bold"><i class="fa-solid fa-trash mr-1"></i> ลบออก</button>
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold text-gray-600">ตำแหน่งซ้าย-ขวา (X)</label>
-                            <input type="range" id="pos-x" min="-3" max="3" step="0.05" class="w-full accent-indigo-600" oninput="moveSelected()">
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold text-gray-600">ตำแหน่งหน้า-หลัง (Z)</label>
-                            <input type="range" id="pos-z" min="-3" max="3" step="0.05" class="w-full accent-indigo-600" oninput="moveSelected()">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <div id="modal-ai" class="modal-overlay" onclick="closeIfOverlay(event,'modal-ai')">
-        <div class="modal-sheet p-5 space-y-4">
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold text-lg"><i class="fa-solid fa-robot text-purple-600 mr-2"></i>ผู้ช่วยออกแบบ AI</h3>
-                <button onclick="toggleModal('modal-ai')" class="text-gray-400"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <p class="text-xs text-gray-500">อธิบายห้องในฝันของคุณ แล้วให้ AI จัดโทนสีและวางเฟอร์นิเจอร์ให้อัตโนมัติ</p>
-            <textarea id="ai-prompt" rows="3" placeholder="เช่น ห้องนอนสไตล์มินิมอลโทนไม้ ให้ความรู้สึกอบอุ่น" class="w-full border rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-purple-500"></textarea>
-            <div class="flex flex-wrap gap-2">
-                <button onclick="fillPrompt('ห้องนอนสไตล์มินิมอล โทนสีขาว-ไม้ อบอุ่น')" class="bg-gray-100 text-xs px-3 py-1.5 rounded-full">มินิมอลโทนไม้</button>
-                <button onclick="fillPrompt('ห้องนั่งเล่นสแกนดิเนเวียน โทนสว่าง เรียบง่าย')" class="bg-gray-100 text-xs px-3 py-1.5 rounded-full">สแกนดิเนเวียน</button>
-                <button onclick="fillPrompt('ห้องหรูโทนเข้ม ทองและดำ')" class="bg-gray-100 text-xs px-3 py-1.5 rounded-full">หรูโทนเข้ม</button>
-                <button onclick="fillPrompt('ห้องปูนเปลือย สไตล์อินดัสเทรียล')" class="bg-gray-100 text-xs px-3 py-1.5 rounded-full">อินดัสเทรียล</button>
-            </div>
-            <button onclick="runAIDesign()" class="w-full bg-purple-600 text-white py-3 rounded-xl font-bold shadow-md active:scale-95 transition">
-                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> ให้ AI ออกแบบห้องนี้
-            </button>
-        </div>
-    </div>
-
-    <div id="modal-styles" class="modal-overlay" onclick="closeIfOverlay(event,'modal-styles')">
-        <div class="modal-sheet p-5 space-y-4">
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold text-lg"><i class="fa-solid fa-palette text-indigo-600 mr-2"></i>เลือกสไตล์สำเร็จรูป</h3>
-                <button onclick="toggleModal('modal-styles')" class="text-gray-400"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div class="grid grid-cols-2 gap-3" id="style-grid"></div>
-        </div>
-    </div>
-
-    <div id="modal-save" class="modal-overlay" onclick="closeIfOverlay(event,'modal-save')">
-        <div class="modal-sheet p-5 space-y-4">
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold text-lg"><i class="fa-solid fa-floppy-disk text-indigo-600 mr-2"></i>บันทึกโครงการ</h3>
-                <button onclick="toggleModal('modal-save')" class="text-gray-400"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div>
-                <label class="text-xs font-bold text-gray-600 block mb-1">ชื่อโครงการ</label>
-                <input id="save-name" type="text" value="โปรเจกต์ห้องของฉัน" class="w-full border rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-            <button onclick="saveProject()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-md active:scale-95 transition">บันทึกลงเครื่องนี้</button>
-        </div>
-    </div>
-
-    <div id="modal-export" class="modal-overlay" onclick="closeIfOverlay(event,'modal-export')">
-        <div class="modal-sheet p-5 space-y-3">
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold text-lg"><i class="fa-solid fa-share-nodes text-green-600 mr-2"></i>ส่งออกผลงาน</h3>
-                <button onclick="toggleModal('modal-export')" class="text-gray-400"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <button onclick="exportImage()" class="w-full bg-gray-100 text-gray-800 py-3 rounded-xl font-bold flex items-center justify-center space-x-2"><i class="fa-solid fa-image"></i><span>บันทึกภาพห้อง (PNG)</span></button>
-            <button onclick="exportJSON()" class="w-full bg-gray-100 text-gray-800 py-3 rounded-xl font-bold flex items-center justify-center space-x-2"><i class="fa-solid fa-file-code"></i><span>ส่งออกข้อมูลห้อง (JSON)</span></button>
-        </div>
-    </div>
-
-    <div id="toast" class="toast"></div>
+  <!-- Toasts -->
+  <div id="toast-root" class="absolute top-4 left-0 right-0 z-50 flex flex-col items-center gap-2 px-4 pointer-events-none"></div>
+</div>
 
 <script>
-// ---------- Tab / modal navigation ----------
-function switchTab(id){
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    if(id === 'screen-editor'){
-        setTimeout(() => { if(renderer) onResize(); }, 50);
-    }
-}
-function switchEditorTab(id){
-    document.querySelectorAll('.editor-subtab').forEach(el => el.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    document.querySelectorAll('.editor-tab-btn').forEach(b => {
-        const on = b.dataset.sub === id;
-        b.classList.toggle('border-indigo-600', on);
-        b.classList.toggle('text-indigo-600', on);
-        b.classList.toggle('border-transparent', !on);
-        b.classList.toggle('text-gray-500', !on);
-    });
-}
-function toggleModal(id){
-    document.getElementById(id).classList.toggle('open');
-}
-function closeIfOverlay(e, id){
-    if(e.target.id === id) toggleModal(id);
-}
-function showToast(msg){
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(showToast._timer);
-    showToast._timer = setTimeout(() => t.classList.remove('show'), 2200);
-}
+/* =========================================================
+   DATA MODEL
+========================================================= */
+const CO2_FACTOR_KG_PER_KM = 0.21; // ค่าเฉลี่ยการปล่อย CO2 ของรถขนส่งเฟอร์นิเจอร์ (กก./กม.)
+const DEPOT = {x:0, y:0, name:'คลังสินค้าโรงไม้'};
 
-// ---------- Scanner simulation ----------
-function processImageScan(){
-    const box = document.getElementById('ai-analysis-box');
-    const title = document.getElementById('ai-analysis-title');
-    const btn = document.getElementById('ai-analysis-continue');
-    box.classList.remove('hidden');
-    title.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin mr-2"></i> AI กำลังวิเคราะห์โครงสร้างห้อง...';
-    btn.classList.add('hidden');
-    setTimeout(() => {
-        title.innerHTML = '<i class="fa-solid fa-circle-check mr-2 text-green-500"></i> วิเคราะห์เสร็จสิ้น สร้างห้อง 3D แล้ว';
-        btn.classList.remove('hidden');
-        startBlankRoom();
-    }, 1800);
-}
-function startBlankRoom(){
-    switchTab('screen-editor');
-    if(!roomGroup) buildRoom();
-}
-
-// ---------- Three.js setup ----------
-let scene, camera, renderer, controls, raycaster, pointer;
-let roomGroup, floorMesh, wallMeshes = [];
-let furnitureObjects = [];
-let selectedObject = null;
-let objIdCounter = 1;
-
-const FURNITURE_TYPES = [
-    { type:'bed', label:'เตียง', icon:'fa-bed', color:0xffffff, size:[1.6,0.5,2.0] },
-    { type:'sofa', label:'โซฟา', icon:'fa-couch', color:0x8b8378, size:[1.8,0.8,0.85] },
-    { type:'table', label:'โต๊ะ', icon:'fa-table', color:0x8b5e3c, size:[1.0,0.4,0.6] },
-    { type:'chair', label:'เก้าอี้', icon:'fa-chair', color:0x5b4636, size:[0.45,0.9,0.45] },
-    { type:'wardrobe', label:'ตู้เสื้อผ้า', icon:'fa-box-archive', color:0x6b5b4a, size:[1.0,2.0,0.6] },
-    { type:'tv', label:'ตู้ทีวี', icon:'fa-tv', color:0x2f2f2f, size:[1.3,0.5,0.4] },
-    { type:'plant', label:'ต้นไม้', icon:'fa-seedling', color:0x3f7d3a, size:[0.4,0.9,0.4] },
-    { type:'lamp', label:'โคมไฟ', icon:'fa-lightbulb', color:0xf2e6a8, size:[0.3,1.4,0.3] },
-    { type:'desk', label:'โต๊ะทำงาน', icon:'fa-laptop', color:0x9c7a4f, size:[1.2,0.75,0.55] }
+const db = {
+  products: [
+    {id:'P1', name:'โซฟา 3 ที่นั่ง วอลนัท', category:'โซฟา', price:8990, weight:45, stock:10, color:0x6B4F3B, dims:[2.0,0.8,0.9], recycledPct:35, material:'โครงไม้ยางพารารีไซเคิล + ผ้าฝ้ายรีไซเคิล'},
+    {id:'P2', name:'โต๊ะทานอาหาร 6 ที่นั่ง', category:'โต๊ะ', price:12990, weight:38, stock:6, color:0x8B5E34, dims:[1.6,0.75,0.9], recycledPct:20, material:'ไม้เอ็นจิเนียร์รีไซเคิล'},
+    {id:'P3', name:'เตียงนอน 6 ฟุต', category:'เตียง', price:15990, weight:60, stock:4, color:0x5A4632, dims:[2.1,0.4,1.9], recycledPct:40, material:'ไม้ MDF รีไซเคิล'},
+    {id:'P4', name:'ชั้นวางหนังสือ 5 ชั้น', category:'ชั้นวาง', price:4990, weight:25, stock:2, color:0x7A5C3E, dims:[0.8,1.8,0.3], recycledPct:55, material:'ไม้อัดรีไซเคิล'},
+    {id:'P5', name:'เก้าอี้สำนักงานเออร์โกโนมิก', category:'เก้าอี้', price:3490, weight:12, stock:15, color:0x33312D, dims:[0.6,1.1,0.6], recycledPct:30, material:'พลาสติก rPET รีไซเคิล'},
+    {id:'P6', name:'ตู้เสื้อผ้าบานเลื่อน', category:'ตู้', price:9990, weight:55, stock:5, color:0x4E3B2A, dims:[1.2,2.0,0.6], recycledPct:25, material:'ไม้ปาร์ติเคิลบอร์ดรีไซเคิล'},
+    {id:'P7', name:'โต๊ะกลางหน้าหินอ่อน', category:'โต๊ะ', price:2990, weight:15, stock:8, color:0x9C7A4E, dims:[1.0,0.4,0.5], recycledPct:15, material:'เศษหินอ่อนผสมเรซิน'},
+    {id:'P8', name:'ชั้นวางทีวีลอยตัว', category:'ชั้นวาง', price:5990, weight:22, stock:7, color:0x6E5237, dims:[1.5,0.5,0.4], recycledPct:45, material:'ไม้อัดรีไซเคิล'},
+  ],
+  customers: [
+    {id:'C1', name:'สมชาย ใจดี', address:'สุขุมวิท 71, กรุงเทพฯ', distance:8, phone:'081-234-5678', coord:{x:5,y:6}},
+    {id:'C2', name:'วรรณา สวยงาม', address:'งามวงศ์วาน, นนทบุรี', distance:18, phone:'082-345-6789', coord:{x:-10,y:15}},
+    {id:'C3', name:'ธนา รุ่งเรือง', address:'รังสิต, ปทุมธานี', distance:25, phone:'083-456-7890', coord:{x:14,y:20}},
+  ],
+  vehicles: [
+    {id:'V1', name:'กระบะตู้ทึบ ทะเบียน 1กข-1234', capacity:800},
+    {id:'V2', name:'รถ 4 ล้อ ทะเบียน 2ขค-5678', capacity:1500},
+    {id:'V3', name:'กระบะ ทะเบียน 3คง-9012', capacity:600},
+  ],
+  drivers: [
+    {id:'D1', name:'สมพงษ์ แข็งขัน', vehicleId:'V1', status:'available'},
+    {id:'D2', name:'อนุชา ไวไฟ', vehicleId:'V2', status:'busy'},
+    {id:'D3', name:'วิชัย มั่นคง', vehicleId:'V3', status:'available'},
+  ],
+  orders: [],
+  notifications: [],
+};
+// ค้นหาตำแหน่งที่ประกาศตัวแปร products (ประมาณช่วง script ด้านล่าง)
+const products = [
+  {
+    id: 'p1',
+    name: 'โซฟา SF380 Dim L100xW80-160xH110 cm',
+    price: 22900,
+    weight: 25,
+    stock: 10,
+    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500', // ใส่ URL รูปภาพสินค้า
+    discount: null,
+    rating: 0
+  },
+  {
+    id: 'p2',
+    name: 'พรมรุ่น Fishbone Series',
+    price: '3,050 - 12,000',
+    weight: 5,
+    stock: 15,
+    image: 'https://images.unsplash.com/photo-1600121848594-d8644e57abab?w=500',
+    discount: '-20%',
+    rating: 0
+  },
+  {
+    id: 'p3',
+    name: 'พรมรุ่น MS-01R Series',
+    price: '7,190 - 11,600',
+    weight: 8,
+    stock: 8,
+    image: 'https://images.unsplash.com/photo-1579656381226-5fc0f0100c3b?w=500',
+    discount: '-20%',
+    rating: 0
+  },
+  {
+    id: 'p4',
+    name: 'พรมรุ่น HS/NX Series HS-01',
+    price: '13,770 - 32,100',
+    weight: 12,
+    stock: 5,
+    image: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=500',
+    discount: '-15%',
+    rating: 0
+  }
 ];
+const RATE_PER_KG = 8;
+const RATE_PER_KM = 15;
+const BASE_FEE = 50;
+const FUEL_PER_KM = 6;
+const DRIVER_WAGE = 150;
+
+function calcShipping(weight, distance){ return Math.round(BASE_FEE + weight*RATE_PER_KG + distance*RATE_PER_KM); }
+function calcTripCost(distance){ return Math.round(distance*FUEL_PER_KM + DRIVER_WAGE); }
+function fmt(n){ return Number(n).toLocaleString('th-TH'); }
+function findProduct(id){ return db.products.find(p=>p.id===id); }
+function findCustomer(id){ return db.customers.find(c=>c.id===id); }
+function findDriver(id){ return db.drivers.find(d=>d.id===id); }
+function findVehicle(id){ return db.vehicles.find(v=>v.id===id); }
+
+function addNotification(text, channels){
+  db.notifications.unshift({id:'N'+Date.now()+Math.random().toString(16).slice(2,5), text, channels, time:nowLabel()});
+  if(db.notifications.length>30) db.notifications.pop();
+}
+function nowLabel(){
+  const d=new Date();
+  return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+
+function buildOrder(customerId, items){
+  const customer = findCustomer(customerId);
+  const distance = customer.distance;
+  const totalWeight = items.reduce((s,i)=>s+findProduct(i.productId).weight*i.qty,0);
+  const productTotal = items.reduce((s,i)=>s+findProduct(i.productId).price*i.qty,0);
+  const shippingCost = calcShipping(totalWeight, distance);
+  const co2 = Math.round(distance*CO2_FACTOR_KG_PER_KM*10)/10;
+  const id = 'O'+(1000+db.orders.length+1);
+  const order = {
+    id, customerId, items, totalWeight, distance,
+    shippingCost, productTotal, grandTotal: productTotal+shippingCost,
+    co2, status:'new', driverId:null,
+    timeline:[{status:'new', time:nowLabel()}]
+  };
+  db.orders.unshift(order);
+  addNotification(`ออเดอร์ #${id} ถูกสร้างขึ้นใหม่ (ลูกค้า: ${customer.name})`, ['inapp']);
+  return order;
+}
+
+function seedOrders(){
+  const o1 = buildOrder('C1', [{productId:'P1',qty:1},{productId:'P7',qty:1}]);
+  o1.status='delivered'; o1.driverId='D2';
+  o1.timeline=[{status:'new',time:'08:10'},{status:'pending',time:'08:40'},{status:'in_transit',time:'09:15'},{status:'delivered',time:'11:02'}];
+
+  const o2 = buildOrder('C2', [{productId:'P2',qty:1},{productId:'P5',qty:4}]);
+  o2.status='in_transit'; o2.driverId='D2';
+  o2.timeline=[{status:'new',time:'09:00'},{status:'pending',time:'09:20'},{status:'in_transit',time:'10:05'}];
+
+  const o3 = buildOrder('C3', [{productId:'P3',qty:1}]);
+  o3.status='pending'; o3.driverId='D1';
+  o3.timeline=[{status:'new',time:'10:30'},{status:'pending',time:'10:50'}];
+
+  const o5 = buildOrder('C2', [{productId:'P8',qty:1}]);
+  o5.status='failed'; o5.driverId='D3';
+  o5.timeline=[{status:'new',time:'07:00'},{status:'pending',time:'07:30'},{status:'in_transit',time:'08:10'},{status:'failed',time:'09:40'}];
+
+  const o4 = buildOrder('C1', [{productId:'P4',qty:1}]); // status new, unassigned
+
+  const o6 = buildOrder('C2', [{productId:'P6',qty:1}]);
+  o6.status='pending'; o6.driverId='D1';
+  o6.timeline=[{status:'new',time:'09:40'},{status:'pending',time:'10:00'}];
+
+  db.notifications = [];
+  addNotification('สต็อกต่ำ: ชั้นวางหนังสือ 5 ชั้น เหลือ 2 ชิ้น', ['line','email']);
+  addNotification('ออเดอร์ #O1001 จัดส่งสำเร็จ', ['line']);
+  addNotification('ออเดอร์ #O1002 เปลี่ยนสถานะเป็น กำลังจัดส่ง', ['email']);
+}
+seedOrders();
+
+const STATUS_META = {
+  new:      {label:'งานใหม่',      color:'var(--info)',    soft:'var(--info-soft)'},
+  pending:  {label:'รอรับสินค้า',  color:'var(--warn)',    soft:'var(--warn-soft)'},
+  in_transit:{label:'กำลังจัดส่ง', color:'var(--accent)',  soft:'var(--accent-soft)'},
+  delivered:{label:'ส่งสำเร็จ',    color:'var(--success)', soft:'var(--success-soft)'},
+  failed:   {label:'ส่งไม่สำเร็จ', color:'var(--danger)',  soft:'var(--danger-soft)'},
+};
+
+/* AI Interior Stylist — rule-based style presets (offline keyword matching) */
+const STYLE_PRESETS = [
+  {key:'minimal', keywords:['มินิมอล','minimal','เรียบ','โมเดิร์น'], name:'มินิมอลโทนอบอุ่น', desc:'เรียบง่าย เส้นสายสะอาด เน้นฟังก์ชันการใช้งาน', productIds:['P1','P7','P8','P5']},
+  {key:'scandi', keywords:['สแกนดิเนเวียน','scandi','ไม้อ่อน','นอร์ดิก'], name:'สแกนดิเนเวียนไม้อ่อน', desc:'โทนไม้อ่อน อบอุ่น เน้นความโปร่งสบายตา', productIds:['P1','P8','P4','P7']},
+  {key:'industrial', keywords:['อุตสาหกรรม','industrial','ลอฟท์','loft'], name:'อินดัสเทรียลลอฟท์', desc:'โครงเหล็ก ไม้ดิบ กลิ่นอายโรงงาน', productIds:['P2','P5','P6','P4']},
+  {key:'japandi', keywords:['ญี่ปุ่น','วะบิ','japandi','เซน'], name:'จาปันดิ (Japandi)', desc:'เรียบนิ่ง อบอุ่น ผสมผสานญี่ปุ่นกับสแกนดิเนเวียน', productIds:['P3','P4','P7','P5']},
+  {key:'luxury', keywords:['หรู','ลักซ์ชัวรี','luxury','พรีเมียม'], name:'ลักซ์ชัวรีร่วมสมัย', desc:'วัสดุพรีเมียม โทนเข้มหรูหรา', productIds:['P2','P1','P6','P8']},
+];
+function matchStylePreset(text){
+  const t = (text||'').toLowerCase();
+  let best = null, bestScore = 0;
+  STYLE_PRESETS.forEach(p=>{
+    let score = 0;
+    p.keywords.forEach(k=>{ if(t.includes(k.toLowerCase())) score++; });
+    if(score>bestScore){ bestScore=score; best=p; }
+  });
+  return best || STYLE_PRESETS[0];
+}
+
+/* Smart Route Optimization — nearest-neighbor heuristic */
+function nearestNeighborRoute(stops){
+  const remaining = stops.slice();
+  const route = [];
+  let current = DEPOT;
+  let totalDist = 0;
+  while(remaining.length){
+    let bestIdx = 0, bestDist = Infinity;
+    remaining.forEach((s,idx)=>{
+      const d = Math.hypot(s.x-current.x, s.y-current.y);
+      if(d<bestDist){ bestDist=d; bestIdx=idx; }
+    });
+    const next = remaining.splice(bestIdx,1)[0];
+    totalDist += bestDist;
+    route.push(next);
+    current = next;
+  }
+  totalDist += Math.hypot(current.x-DEPOT.x, current.y-DEPOT.y);
+  return {route, totalDist};
+}
+function naiveRouteDistance(stops){
+  let current = DEPOT, total = 0;
+  stops.forEach(s=>{ total += Math.hypot(s.x-current.x, s.y-current.y); current = s; });
+  total += Math.hypot(current.x-DEPOT.x, current.y-DEPOT.y);
+  return total;
+}
+function driverActiveStops(driverId){
+  const activeOrders = db.orders.filter(o=>o.driverId===driverId && (o.status==='pending'||o.status==='in_transit'));
+  const map = {};
+  activeOrders.forEach(o=>{
+    const c = findCustomer(o.customerId);
+    const cx = c.coord ? c.coord.x : 0, cy = c.coord ? c.coord.y : 0;
+    if(!map[c.id]) map[c.id] = {id:c.id, name:c.name, x:cx, y:cy, orders:[]};
+    map[c.id].orders.push(o.id);
+  });
+  return Object.values(map);
+}
+function computeFleetCO2Savings(){
+  let totalSavedKm = 0;
+  db.drivers.forEach(d=>{
+    const stops = driverActiveStops(d.id);
+    if(stops.length>=2){
+      const naive = naiveRouteDistance(stops);
+      const {totalDist} = nearestNeighborRoute(stops);
+      totalSavedKm += Math.max(0, naive-totalDist);
+    }
+  });
+  return totalSavedKm*CO2_FACTOR_KG_PER_KM;
+}
+function renderRouteMapSVG(routeStops){
+  const allPoints = [DEPOT, ...routeStops];
+  const xs = allPoints.map(p=>p.x), ys = allPoints.map(p=>p.y);
+  const minX = Math.min(...xs)-4, maxX = Math.max(...xs)+4;
+  const minY = Math.min(...ys)-4, maxY = Math.max(...ys)+4;
+  const w=300, h=220;
+  const sx = x => ((x-minX)/(maxX-minX))*w;
+  const sy = y => h-((y-minY)/(maxY-minY))*h;
+  let path = `M ${sx(DEPOT.x)} ${sy(DEPOT.y)} `;
+  routeStops.forEach(s=>{ path += `L ${sx(s.x)} ${sy(s.y)} `; });
+  path += `L ${sx(DEPOT.x)} ${sy(DEPOT.y)}`;
+  const dots = routeStops.map((s,idx)=>`
+    <circle cx="${sx(s.x)}" cy="${sy(s.y)}" r="11" fill="var(--accent)"></circle>
+    <text x="${sx(s.x)}" y="${sy(s.y)+4}" font-size="10" fill="#fff" text-anchor="middle" font-weight="600">${idx+1}</text>
+    <text x="${sx(s.x)}" y="${sy(s.y)+24}" font-size="9" fill="#6E6656" text-anchor="middle">${s.name}</text>
+  `).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto">
+    <path d="${path}" fill="none" stroke="#2E4A3A" stroke-width="2" stroke-dasharray="5,4"></path>
+    <circle cx="${sx(DEPOT.x)}" cy="${sy(DEPOT.y)}" r="10" fill="#2E4A3A"></circle>
+    <text x="${sx(DEPOT.x)}" y="${sy(DEPOT.y)+4}" font-size="11" fill="#fff" text-anchor="middle">🏭</text>
+    ${dots}
+  </svg>`;
+}
+
+/* =========================================================
+   STATE
+========================================================= */
+const state = {
+  role: null,
+  screen: 'home',
+  customerIdView: 'C1',
+  driverIdView: 'D1',
+  routeDriverId: 'D1',
+  cart: [],
+  designer: { placed: [] },
+  aiStylist: { photo:null, styleText:'', result:null },
+  productFilter: 'ทั้งหมด',
+  orderTab: 'all',
+  masterTab: 'customers',
+};
+
+/* =========================================================
+   TOASTS
+========================================================= */
+function toast(msg, type='default'){
+  const root = document.getElementById('toast-root');
+  const colors = {default:'bg-[var(--ink)]', success:'bg-[var(--success)]', warn:'bg-[var(--warn)]', danger:'bg-[var(--danger)]'};
+  const el = document.createElement('div');
+  el.className = `toast pointer-events-auto ${colors[type]||colors.default} text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg max-w-[90%] text-center`;
+  el.textContent = msg;
+  root.appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 2400);
+}
+
+/* =========================================================
+   MODAL
+========================================================= */
+function openModal(innerHtml){
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="modal-backdrop" onclick="if(event.target===this)closeModal()">
+    <div class="modal-sheet px-5 pt-4 pb-8">
+      <div class="w-10 h-1.5 bg-[var(--line)] rounded-full mx-auto mb-4"></div>
+      ${innerHtml}
+    </div>
+  </div>`;
+}
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+function loginAs(role){
+  state.role = role;
+  if(role==='customer') state.screen='home';
+  if(role==='admin') state.screen='dashboard';
+  if(role==='driver') state.screen='jobs';
+  render();
+}
+function switchRole(){
+  openModal(`
+    <h3 class="font-display font-semibold text-lg mb-1">สลับบทบาทผู้ใช้งาน</h3>
+    <p class="text-sm text-[var(--ink-soft)] mb-4">เลือกมุมมองที่ต้องการใช้งานระบบ</p>
+    <div class="space-y-2">
+      ${roleBtn('customer','ลูกค้า','เลือกซื้อสินค้า ออกแบบห้อง 3D และ AR')}
+      ${roleBtn('admin','แอดมิน','บริหารจัดการร้านและการขนส่ง')}
+      ${roleBtn('driver','คนขับ','รับงานและอัปเดตสถานะจัดส่ง')}
+    </div>
+  `);
+}
+function roleBtn(role,title,desc){
+  const active = state.role===role;
+  return `<button onclick="closeModal();loginAs('${role}')" class="w-full text-left p-3.5 rounded-2xl border ${active?'border-[var(--primary)] bg-[var(--primary)]/5':'border-[var(--line)] bg-white'} flex items-center justify-between">
+    <div><div class="font-semibold">${title}</div><div class="text-xs text-[var(--ink-soft)]">${desc}</div></div>
+    ${active?'<span class="text-[var(--primary)] text-xl">✓</span>':''}
+  </button>`;
+}
+function navigateTo(screen){ state.screen = screen; render(); }
+
+/* =========================================================
+   HEADER / NAV RENDER
+========================================================= */
+function screenTitle(){
+  const map = {
+    home:'ร้านเฟอร์นิเจอร์', design:'ออกแบบห้อง 3D', cart:'ตะกร้าสินค้า', orders:'คำสั่งซื้อของฉัน', aiStylist:'AI Interior Stylist',
+    dashboard:'ภาพรวมธุรกิจ', products:'จัดการสินค้า', adminorders:'จัดการคำสั่งซื้อ', master:'ข้อมูลหลัก', routes:'จัดเส้นทางอัจฉริยะ',
+    jobs:'งานที่ได้รับมอบหมาย', history:'ประวัติงาน',
+  };
+  return map[state.screen] || 'โรงไม้';
+}
+function renderHeader(){
+  const el = document.getElementById('header');
+  if(!state.role){ el.innerHTML=''; return; }
+  const unread = db.notifications.length;
+  el.innerHTML = `
+    <div class="flex items-center gap-2 min-w-0">
+      <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-base shrink-0">🪵</div>
+      <div class="font-display font-semibold text-[15px] truncate">${screenTitle()}</div>
+    </div>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button onclick="showNotifications()" class="relative w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+        <span class="text-base">🔔</span>
+        ${unread?`<span class="absolute -top-0.5 -right-0.5 bg-[var(--accent)] text-[10px] leading-none font-bold rounded-full w-4 h-4 flex items-center justify-center">${unread>9?'9+':unread}</span>`:''}
+      </button>
+      <button onclick="switchRole()" class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-base">
+        ${state.role==='admin'?'🛠️':state.role==='driver'?'🚚':'🙂'}
+      </button>
+    </div>`;
+}
+function showNotifications(){
+  openModal(`
+    <h3 class="font-display font-semibold text-lg mb-3">การแจ้งเตือน</h3>
+    <div class="space-y-2 max-h-[60vh] overflow-y-auto">
+    ${db.notifications.length===0?'<p class="text-sm text-[var(--ink-soft)] py-6 text-center">ยังไม่มีการแจ้งเตือน</p>':db.notifications.map(n=>`
+      <div class="card p-3">
+        <p class="text-sm">${n.text}</p>
+        <div class="flex items-center gap-2 mt-1.5">
+          <span class="text-[11px] text-[var(--ink-soft)]">${n.time}</span>
+          ${n.channels.map(c=>`<span class="chip bg-[var(--line)] text-[var(--ink-soft)]">${c==='line'?'LINE':c==='email'?'Email':'ในแอป'}</span>`).join('')}
+        </div>
+      </div>`).join('')}
+    </div>
+  `);
+}
+function navItem(screen,icon,label){
+  const active = state.screen===screen;
+  return `<button onclick="navigateTo('${screen}')" class="tab-btn flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5" style="color:${active?'var(--primary)':'var(--ink-soft)'}">
+    <span class="text-[19px]">${icon}</span>
+    <span class="text-[10px] font-medium">${label}</span>
+  </button>`;
+}
+function renderBottomNav(){
+  const el = document.getElementById('bottomnav');
+  if(!state.role){ el.innerHTML=''; return; }
+  let items = '';
+  if(state.role==='customer'){
+    items = navItem('home','🏠','หน้าแรก') + navItem('design','🛋️','ออกแบบ') +
+      navItem('cart',`🛒${state.cart.length?` ${state.cart.length}`:''}`,'ตะกร้า') + navItem('orders','📦','ออเดอร์');
+  } else if(state.role==='admin'){
+    items = navItem('dashboard','📊','แดชบอร์ด') + navItem('products','🪑','สินค้า') +
+      navItem('adminorders','🚛','คำสั่งซื้อ') + navItem('routes','🗺️','เส้นทาง') + navItem('master','🗂️','ข้อมูลหลัก');
+  } else if(state.role==='driver'){
+    items = navItem('jobs','📋','งานของฉัน') + navItem('history','🕘','ประวัติ');
+  }
+  el.innerHTML = `<div class="flex">${items}</div>`;
+}
+
+/* =========================================================
+   MASTER RENDER
+========================================================= */
+function render(){
+  renderHeader();
+  renderBottomNav();
+  const content = document.getElementById('content');
+  content.classList.toggle('no-header', !state.role);
+  if(!state.role){ content.innerHTML = renderLogin(); return; }
+
+  let html = '';
+  if(state.role==='customer'){
+    if(state.screen==='home') html = renderCustomerHome();
+    else if(state.screen==='design') html = renderDesignerShell();
+    else if(state.screen==='cart') html = renderCart();
+    else if(state.screen==='orders') html = renderCustomerOrders();
+    else if(state.screen==='aiStylist') html = renderAIStylist();
+  } else if(state.role==='admin'){
+    if(state.screen==='dashboard') html = renderDashboard();
+    else if(state.screen==='products') html = renderProductsAdmin();
+    else if(state.screen==='adminorders') html = renderOrdersAdmin();
+    else if(state.screen==='master') html = renderMaster();
+    else if(state.screen==='routes') html = renderRoutesAdmin();
+  } else if(state.role==='driver'){
+    if(state.screen==='jobs') html = renderDriverJobs();
+    else if(state.screen==='history') html = renderDriverHistory();
+  }
+  content.innerHTML = html;
+
+  if(state.role==='customer' && state.screen==='design'){ initThree(); }
+  else { stopThree(); }
+}
+
+/* =========================================================
+   LOGIN
+========================================================= */
+function renderLogin(){
+  return `
+  <div class="h-full flex flex-col justify-center px-7" style="background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 65%);color:#fff;">
+    <div class="mb-10 text-center">
+      <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-3xl mx-auto mb-4">🪵</div>
+      <h1 class="font-display text-3xl font-semibold">โรงไม้</h1>
+      <p class="text-white/70 text-sm mt-1">เฟอร์นิเจอร์ · ออกแบบห้อง 3D/AR · ระบบขนส่งอัจฉริยะ</p>
+    </div>
+    <div class="space-y-3">
+      <button onclick="loginAs('customer')" class="w-full bg-white text-[var(--primary-dark)] font-semibold rounded-2xl py-3.5 flex items-center justify-center gap-2">
+        <span>🙂</span> เข้าสู่ระบบในฐานะลูกค้า
+      </button>
+      <button onclick="loginAs('admin')" class="w-full bg-white/10 border border-white/25 text-white font-semibold rounded-2xl py-3.5 flex items-center justify-center gap-2">
+        <span>🛠️</span> เข้าสู่ระบบในฐานะแอดมิน
+      </button>
+      <button onclick="loginAs('driver')" class="w-full bg-white/10 border border-white/25 text-white font-semibold rounded-2xl py-3.5 flex items-center justify-center gap-2">
+        <span>🚚</span> เข้าสู่ระบบในฐานะคนขับ
+      </button>
+    </div>
+    <p class="text-center text-white/50 text-xs mt-8">เดโมระบบจำลอง — ไม่ต้องกรอกรหัสผ่านจริง</p>
+  </div>`;
+}
+
+/* =========================================================
+   CUSTOMER: HOME / CATALOG
+========================================================= */
+function renderCustomerHome(){
+  const cats = ['ทั้งหมด', ...new Set(db.products.map(p=>p.category))];
+  const list = db.products.filter(p=> state.productFilter==='ทั้งหมด' || p.category===state.productFilter);
+  return `
+  <div class="px-4 pt-4 pb-6">
+    <button onclick="navigateTo('design')" class="w-full rounded-2xl p-4 mb-3 text-left text-white relative overflow-hidden" style="background:linear-gradient(120deg,var(--primary),var(--primary-dark));">
+      <div class="relative z-10">
+        <div class="font-display font-semibold text-lg">ออกแบบห้องของคุณเป็นแบบ 3D</div>
+        <div class="text-sm text-white/75 mt-0.5">ลองจัดวางเฟอร์นิเจอร์ก่อนสั่งซื้อจริง</div>
+        <div class="inline-flex items-center gap-1 mt-3 bg-white text-[var(--primary-dark)] text-sm font-semibold px-3.5 py-1.5 rounded-full">เริ่มออกแบบ →</div>
+      </div>
+      <div class="absolute -right-2 -bottom-3 text-6xl opacity-25">🛋️</div>
+    </button>
+
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <button onclick="navigateTo('aiStylist')" class="card p-3 text-left">
+        <div class="text-2xl mb-1">🎨</div>
+        <div class="text-[12.5px] font-semibold leading-snug">AI Interior Stylist</div>
+        <div class="text-[10.5px] text-[var(--ink-soft)] mt-0.5">อัปโหลดรูปห้อง ให้ระบบจัดเซตให้</div>
+      </button>
+      <button onclick="openARView([db.products[0].id])" class="card p-3 text-left">
+        <div class="text-2xl mb-1">📷</div>
+        <div class="text-[12.5px] font-semibold leading-snug">ลองดูในห้องจริง (AR)</div>
+        <div class="text-[10.5px] text-[var(--ink-soft)] mt-0.5">ส่องกล้องวางเฟอร์นิเจอร์ทันที</div>
+      </button>
+    </div>
+
+    <div class="flex gap-2 overflow-x-auto scrollbar-x pb-1 mb-3">
+      ${cats.map(c=>`<button onclick="state.productFilter='${c}';render()" class="shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium ${state.productFilter===c?'btn-primary':'bg-white border border-[var(--line)] text-[var(--ink-soft)]'}">${c}</button>`).join('')}
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      ${list.map(p=>`
+        <div class="card p-3">
+          <div class="h-20 rounded-xl mb-2 flex items-center justify-center text-3xl" style="background:var(--accent-soft)">🪑</div>
+          <div class="text-[13px] font-semibold leading-snug line-clamp-2">${p.name}</div>
+          <div class="text-[11px] text-[var(--ink-soft)] mt-0.5">น้ำหนัก ${p.weight} กก.</div>
+          <div class="flex items-center justify-between mt-2">
+            <span class="font-display font-semibold text-[var(--accent)]">฿${fmt(p.price)}</span>
+            <button onclick="quickAddToCart('${p.id}')" class="w-7 h-7 rounded-full btn-accent flex items-center justify-center text-base leading-none">＋</button>
+          </div>
+          <div class="flex items-center gap-1 mt-1.5 flex-wrap">
+            ${p.recycledPct?`<span class="chip" style="background:var(--success-soft);color:var(--success);font-size:10px;padding:2px 7px;">♻️ รีไซเคิล ${p.recycledPct}%</span>`:''}
+            ${p.stock<=3?`<span class="text-[10px] text-[var(--danger)] font-medium">เหลือ ${p.stock} ชิ้น</span>`:''}
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+function quickAddToCart(productId){
+  const item = state.cart.find(i=>i.productId===productId);
+  if(item) item.qty++; else state.cart.push({productId, qty:1});
+  toast('เพิ่มลงตะกร้าแล้ว','success');
+  render();
+}
+
+/* =========================================================
+   CUSTOMER: 3D DESIGNER
+========================================================= */
+let three = { renderer:null, scene:null, camera:null, raf:null, target:null, spherical:{r:9,theta:0.8,phi:1.1}, dragging:false, lastX:0, lastY:0, itemsGroup:null, _onMove:null, _onUp:null };
+
+function renderDesignerShell(){
+  return `
+  <div class="h-full flex flex-col">
+    <div class="relative bg-[#EFE7D6]" style="height:40%;">
+      <canvas id="three-canvas" class="w-full h-full block"></canvas>
+      <div class="absolute bottom-2 left-2 right-2 text-center text-[11px] text-[var(--ink-soft)] bg-white/70 rounded-full py-1">ลากเพื่อหมุนมุมมองห้อง</div>
+    </div>
+    <div class="px-4 pt-3 pb-2">
+      <div class="font-display font-semibold text-sm mb-2">เลือกเฟอร์นิเจอร์เพื่อวางในห้อง</div>
+      <div class="flex gap-2.5 overflow-x-auto scrollbar-x pb-1">
+        ${db.products.map(p=>`
+          <button onclick="addToRoom('${p.id}')" class="shrink-0 w-[86px] card p-2 text-left">
+            <div class="h-10 rounded-lg mb-1 flex items-center justify-center text-xl" style="background:var(--accent-soft)">🪑</div>
+            <div class="text-[10.5px] font-medium leading-tight line-clamp-2">${p.name}</div>
+          </button>`).join('')}
+      </div>
+    </div>
+    <div class="flex-1 overflow-y-auto px-4 pb-3">
+      <div class="font-display font-semibold text-sm mb-2">รายการที่จัดวางในห้อง (<span id="placed-count">0</span>)</div>
+      <div id="placed-list" class="space-y-2"></div>
+    </div>
+    <div class="px-4 pb-4 pt-1 border-t border-[var(--line)] bg-[var(--bg)]">
+      <div class="flex items-center justify-between text-sm mb-2">
+        <span class="text-[var(--ink-soft)]">น้ำหนักรวมโดยประมาณ</span>
+        <span id="placed-weight" class="font-semibold">0 กก.</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <button onclick="openARView(state.designer.placed.map(i=>i.productId))" class="rounded-2xl py-3 font-semibold border" style="border-color:var(--primary);color:var(--primary)">📷 ดูในห้องจริง</button>
+        <button onclick="confirmDesign()" class="btn-primary font-semibold rounded-2xl py-3">ยืนยัน → ตะกร้า</button>
+      </div>
+    </div>
+  </div>`;
+}
 
 function initThree(){
-    const container = document.getElementById('canvas-container');
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a1a);
+  stopThree();
+  const canvas = document.getElementById('three-canvas');
+  if(!canvas) return;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xEFE7D6);
 
-    camera = new THREE.PerspectiveCamera(50, container.clientWidth/container.clientHeight, 0.1, 100);
-    camera.position.set(4, 4, 6);
+  const room = 6;
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(room,room), new THREE.MeshStandardMaterial({color:0xD9CBAE}));
+  floor.rotation.x = -Math.PI/2;
+  scene.add(floor);
+  const grid = new THREE.GridHelper(room, 12, 0xB8A67F, 0xCDBE9C);
+  scene.add(grid);
 
-    renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
+  const wallMat = new THREE.MeshStandardMaterial({color:0xF3ECDD, side:THREE.DoubleSide, transparent:true, opacity:0.55});
+  const wallBack = new THREE.Mesh(new THREE.PlaneGeometry(room,2.6), wallMat);
+  wallBack.position.set(0,1.3,-room/2);
+  scene.add(wallBack);
+  const wallLeft = new THREE.Mesh(new THREE.PlaneGeometry(room,2.6), wallMat);
+  wallLeft.position.set(-room/2,1.3,0);
+  wallLeft.rotation.y = Math.PI/2;
+  scene.add(wallLeft);
 
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.target.set(0,1,0);
-    controls.enableDamping = true;
-    controls.maxPolarAngle = Math.PI/2 - 0.02;
+  const light1 = new THREE.HemisphereLight(0xffffff, 0x554433, 1.0);
+  scene.add(light1);
+  const light2 = new THREE.DirectionalLight(0xffffff, 0.6);
+  light2.position.set(4,6,3);
+  scene.add(light2);
 
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x666666, 1.0);
-    scene.add(hemi);
-    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-    dir.position.set(5,8,4);
-    scene.add(dir);
+  const camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 100);
+  const target = new THREE.Vector3(0,0.4,0);
 
-    raycaster = new THREE.Raycaster();
-    pointer = new THREE.Vector2();
-    renderer.domElement.addEventListener('pointerdown', onCanvasClick);
-    window.addEventListener('resize', onResize);
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+  renderer.setSize(w,h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
 
-    animate();
-}
-function onResize(){
-    const container = document.getElementById('canvas-container');
-    camera.aspect = container.clientWidth/container.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(container.clientWidth, container.clientHeight);
-}
-function animate(){
-    requestAnimationFrame(animate);
-    controls.update();
+  three.renderer = renderer; three.scene = scene; three.camera = camera; three.target = target;
+  three.itemsGroup = new THREE.Group();
+  scene.add(three.itemsGroup);
+
+  updateCamera();
+  rebuildRoomItems();
+
+  const onDown = (x,y)=>{ three.dragging=true; three.lastX=x; three.lastY=y; };
+  const onMove = (x,y)=>{
+    if(!three.dragging) return;
+    const dx = x-three.lastX, dy = y-three.lastY;
+    three.spherical.theta -= dx*0.006;
+    three.spherical.phi = Math.min(1.45, Math.max(0.3, three.spherical.phi - dy*0.006));
+    three.lastX=x; three.lastY=y;
+    updateCamera();
+  };
+  const onUp = ()=>{ three.dragging=false; };
+
+  canvas.addEventListener('mousedown', e=>onDown(e.clientX,e.clientY));
+  window.addEventListener('mousemove', e=>onMove(e.clientX,e.clientY));
+  window.addEventListener('mouseup', onUp);
+  canvas.addEventListener('touchstart', e=>{const t=e.touches[0]; onDown(t.clientX,t.clientY);}, {passive:true});
+  canvas.addEventListener('touchmove', e=>{const t=e.touches[0]; onMove(t.clientX,t.clientY);}, {passive:true});
+  canvas.addEventListener('touchend', onUp);
+  three._onMove = onMove; three._onUp = onUp;
+
+  function loop(){
+    three.raf = requestAnimationFrame(loop);
     renderer.render(scene, camera);
+  }
+  loop();
+  renderPlacedList();
+}
+function updateCamera(){
+  const s = three.spherical;
+  const x = s.r * Math.sin(s.phi) * Math.sin(s.theta);
+  const y = s.r * Math.cos(s.phi);
+  const z = s.r * Math.sin(s.phi) * Math.cos(s.theta);
+  three.camera.position.set(x,y,z);
+  three.camera.lookAt(three.target);
+}
+function stopThree(){
+  if(three.raf) cancelAnimationFrame(three.raf);
+  if(three._onMove) window.removeEventListener('mousemove', three._onMove);
+  if(three._onUp) window.removeEventListener('mouseup', three._onUp);
+  three.raf=null; three.renderer=null; three.scene=null; three._onMove=null; three._onUp=null;
+}
+function addToRoom(productId){
+  const p = findProduct(productId);
+  state.designer.placed.push({productId, uid: 'it'+Date.now()+Math.random().toString(16).slice(2,4)});
+  toast(`วาง "${p.name}" ในห้องแล้ว`,'success');
+  rebuildRoomItems();
+  renderPlacedList();
+}
+function removeFromRoom(uid){
+  state.designer.placed = state.designer.placed.filter(i=>i.uid!==uid);
+  rebuildRoomItems();
+  renderPlacedList();
+}
+function rebuildRoomItems(){
+  if(!three.itemsGroup) return;
+  three.itemsGroup.clear();
+  const cols = 4, spacing = 1.15, startX = -((Math.min(cols,state.designer.placed.length)-1)*spacing)/2;
+  state.designer.placed.forEach((item,idx)=>{
+    const p = findProduct(item.productId);
+    const [dx,dy,dz] = p.dims;
+    const geo = new THREE.BoxGeometry(dx,dy,dz);
+    const mat = new THREE.MeshStandardMaterial({color:p.color});
+    const mesh = new THREE.Mesh(geo,mat);
+    const col = idx % cols, row = Math.floor(idx/cols);
+    mesh.position.set(startX + col*spacing, dy/2, -1 + row*1.2);
+    three.itemsGroup.add(mesh);
+  });
+}
+function renderPlacedList(){
+  const listEl = document.getElementById('placed-list');
+  const countEl = document.getElementById('placed-count');
+  const weightEl = document.getElementById('placed-weight');
+  if(!listEl) return;
+  const placed = state.designer.placed;
+  countEl.textContent = placed.length;
+  const totalWeight = placed.reduce((s,i)=>s+findProduct(i.productId).weight,0);
+  weightEl.textContent = totalWeight + ' กก.';
+  listEl.innerHTML = placed.length===0
+    ? `<p class="text-sm text-[var(--ink-soft)] text-center py-6">แตะเฟอร์นิเจอร์ด้านบนเพื่อเริ่มจัดวาง</p>`
+    : placed.map(item=>{
+      const p = findProduct(item.productId);
+      return `<div class="card p-2.5 flex items-center justify-between">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0" style="background:var(--accent-soft)">🪑</div>
+          <div class="min-w-0"><div class="text-[13px] font-medium truncate">${p.name}</div><div class="text-[11px] text-[var(--ink-soft)]">${p.weight} กก. · ฿${fmt(p.price)}</div></div>
+        </div>
+        <button onclick="removeFromRoom('${item.uid}')" class="text-[var(--danger)] text-lg px-2">✕</button>
+      </div>`;
+    }).join('');
+}
+function confirmDesign(){
+  if(state.designer.placed.length===0){ toast('กรุณาวางเฟอร์นิเจอร์อย่างน้อย 1 ชิ้น','warn'); return; }
+  state.designer.placed.forEach(item=>{
+    const existing = state.cart.find(i=>i.productId===item.productId);
+    if(existing) existing.qty++; else state.cart.push({productId:item.productId, qty:1});
+  });
+  state.designer.placed = [];
+  toast('เพิ่มการออกแบบลงตะกร้าเรียบร้อย','success');
+  navigateTo('cart');
 }
 
-function buildRoom(){
-    if(!scene) initThree();
-    document.getElementById('empty-room-hint').style.display = 'none';
-    if(roomGroup) scene.remove(roomGroup);
-    roomGroup = new THREE.Group();
-    scene.add(roomGroup);
-    wallMeshes = [];
-
-    const w = parseFloat(document.getElementById('room-width').value);
-    const d = parseFloat(document.getElementById('room-depth').value);
-    const h = parseFloat(document.getElementById('room-height').value);
-    const wallColor = document.getElementById('wall-color').value;
-    const floorColor = document.getElementById('floor-color').value;
-
-    const floorGeo = new THREE.PlaneGeometry(w, d);
-    const floorMat = new THREE.MeshStandardMaterial({ color: floorColor, side: THREE.DoubleSide });
-    floorMesh = new THREE.Mesh(floorGeo, floorMat);
-    floorMesh.rotation.x = -Math.PI/2;
-    roomGroup.add(floorMesh);
-
-    const wallMat = new THREE.MeshStandardMaterial({ color: wallColor, side: THREE.DoubleSide });
-    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wallMat);
-    backWall.position.set(0, h/2, -d/2);
-    roomGroup.add(backWall); wallMeshes.push(backWall);
-
-    const sideWallMat = wallMat.clone();
-    const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(d, h), sideWallMat);
-    leftWall.rotation.y = Math.PI/2;
-    leftWall.position.set(-w/2, h/2, 0);
-    roomGroup.add(leftWall); wallMeshes.push(leftWall);
-
-    const rightWallMat = wallMat.clone();
-    const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(d, h), rightWallMat);
-    rightWall.rotation.y = -Math.PI/2;
-    rightWall.position.set(w/2, h/2, 0);
-    roomGroup.add(rightWall); wallMeshes.push(rightWall);
-
-    const grid = new THREE.GridHelper(Math.max(w,d)+1, Math.round(Math.max(w,d)+1), 0x999999, 0x444444);
-    grid.position.y = 0.001;
-    roomGroup.add(grid);
-
-    controls.target.set(0, h/2, 0);
+/* =========================================================
+   CUSTOMER: AI INTERIOR STYLIST
+========================================================= */
+function renderAIStylist(){
+  const s = state.aiStylist;
+  return `
+  <div class="px-4 pt-4 pb-6">
+    <div class="card p-4 mb-4">
+      <div class="font-display font-semibold text-base mb-1">AI Interior Stylist</div>
+      <p class="text-[12.5px] text-[var(--ink-soft)] mb-3">อัปโหลดรูปห้องโล่งของคุณ แล้วบอกสไตล์ที่ชอบ ระบบจะจับคู่ชุดเฟอร์นิเจอร์ที่เหมาะกับคุณจากร้านให้ทันที</p>
+      <label class="block border-2 border-dashed border-[var(--line)] rounded-2xl h-40 flex items-center justify-center text-center cursor-pointer overflow-hidden relative">
+        ${s.photo?`<img src="${s.photo}" class="absolute inset-0 w-full h-full object-cover">`:`
+        <div class="text-[var(--ink-soft)]"><div class="text-2xl mb-1">📷</div><div class="text-[12.5px]">แตะเพื่ออัปโหลดรูปห้อง</div></div>`}
+        <input type="file" accept="image/*" class="hidden" onchange="handleRoomUpload(event)">
+      </label>
+      <textarea id="ai-style-text" placeholder="เช่น อยากได้ห้องนั่งเล่นสไตล์มินิมอล โทนอบอุ่น" class="w-full mt-3 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm h-20">${s.styleText||''}</textarea>
+      <button onclick="runAIStylist()" class="w-full btn-accent font-semibold rounded-2xl py-3 mt-3">ให้ AI จัดชุดเฟอร์นิเจอร์ให้</button>
+      <p class="text-[10.5px] text-[var(--ink-soft)] mt-2">* จับคู่คำอธิบายของคุณกับสไตล์ที่คัดสรรไว้ล่วงหน้าในร้าน</p>
+    </div>
+    ${s.result ? renderAIResult(s.result) : ''}
+  </div>`;
+}
+function handleRoomUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ state.aiStylist.photo = reader.result; render(); };
+  reader.readAsDataURL(file);
+}
+function runAIStylist(){
+  const textEl = document.getElementById('ai-style-text');
+  const text = textEl ? textEl.value.trim() : '';
+  state.aiStylist.styleText = text;
+  if(!state.aiStylist.photo){ toast('กรุณาอัปโหลดรูปห้องก่อน','warn'); return; }
+  const preset = matchStylePreset(text || 'มินิมอล');
+  const items = preset.productIds.map(id=>findProduct(id));
+  const total = items.reduce((s,p)=>s+p.price,0);
+  const weight = items.reduce((s,p)=>s+p.weight,0);
+  state.aiStylist.result = {preset, items, total, weight};
+  toast(`แนะนำสไตล์ "${preset.name}" ให้แล้ว`,'success');
+  render();
+}
+function renderAIResult(result){
+  const positions = [{top:'62%',left:'20%'},{top:'55%',left:'72%'},{top:'32%',left:'46%'},{top:'78%',left:'50%'}];
+  return `
+  <div class="card p-4 mb-4">
+    <div class="font-display font-semibold text-sm mb-0.5">สไตล์ที่แนะนำ: ${result.preset.name}</div>
+    <p class="text-[12px] text-[var(--ink-soft)] mb-3">${result.preset.desc}</p>
+    <div class="relative rounded-2xl overflow-hidden h-48 mb-3">
+      <img src="${state.aiStylist.photo}" class="absolute inset-0 w-full h-full object-cover">
+      ${result.items.map((p,idx)=>`
+        <div class="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center" style="top:${positions[idx%4].top};left:${positions[idx%4].left};">
+          <div class="w-9 h-9 rounded-full bg-white shadow flex items-center justify-center text-base">🪑</div>
+          <span class="text-[9.5px] bg-black/60 text-white px-1.5 py-0.5 rounded-full mt-1 max-w-[90px] truncate">${p.name}</span>
+        </div>`).join('')}
+    </div>
+    <div class="space-y-1.5 mb-3">
+      ${result.items.map(p=>`<div class="flex justify-between text-sm"><span>${p.name}</span><span>฿${fmt(p.price)}</span></div>`).join('')}
+      <div class="h-px bg-[var(--line)] my-1.5"></div>
+      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">น้ำหนักรวม</span><span>${result.weight} กก.</span></div>
+      <div class="flex justify-between font-semibold"><span>ราคารวมทั้งเซต</span><span class="text-[var(--accent)]">฿${fmt(result.total)}</span></div>
+    </div>
+    <button onclick="addSetToCart()" class="w-full btn-primary font-semibold rounded-2xl py-3">เพิ่มทั้งเซตลงตะกร้า</button>
+  </div>`;
+}
+function addSetToCart(){
+  const result = state.aiStylist.result;
+  if(!result) return;
+  result.items.forEach(p=>{
+    const existing = state.cart.find(i=>i.productId===p.id);
+    if(existing) existing.qty++; else state.cart.push({productId:p.id, qty:1});
+  });
+  toast('เพิ่มทั้งเซตลงตะกร้าแล้ว','success');
+  navigateTo('cart');
 }
 
-function updateRoomDims(){
-    document.getElementById('val-width').textContent = parseFloat(document.getElementById('room-width').value).toFixed(1) + ' ม.';
-    document.getElementById('val-depth').textContent = parseFloat(document.getElementById('room-depth').value).toFixed(1) + ' ม.';
-    document.getElementById('val-height').textContent = parseFloat(document.getElementById('room-height').value).toFixed(1) + ' ม.';
-    buildRoom();
-    reAddFurnitureAfterRebuild();
-}
-function reAddFurnitureAfterRebuild(){
-    furnitureObjects.forEach(obj => roomGroup.add(obj.mesh));
-}
-function updateMaterials(){
-    if(!roomGroup) return;
-    const wallColor = document.getElementById('wall-color').value;
-    const floorColor = document.getElementById('floor-color').value;
-    floorMesh.material.color.set(floorColor);
-    wallMeshes.forEach(m => m.material.color.set(wallColor));
-}
+/* =========================================================
+   AR: CAMERA-BASED FURNITURE PLACEMENT (WebXR + fallback)
+========================================================= */
+let arState = { productIds:[], renderer:null, scene:null, camera:null, group:null, raf:null, stream:null, xrSession:null, dragging:false, lastX:0, lastY:0, _onMove:null, _onUp:null };
 
-function makeFurnitureMesh(def){
-    const group = new THREE.Group();
-    const mat = new THREE.MeshStandardMaterial({ color: def.color });
-    const geo = new THREE.BoxGeometry(def.size[0], def.size[1], def.size[2]);
-    const box = new THREE.Mesh(geo, mat);
-    box.position.y = def.size[1]/2;
-    group.add(box);
-    group.userData.type = def.type;
-    group.userData.label = def.label;
-    return group;
+function openARView(productIds){
+  if(!productIds || productIds.length===0){ toast('กรุณาเลือกเฟอร์นิเจอร์ก่อนดู AR','warn'); return; }
+  arState.productIds = productIds;
+  const overlay = document.getElementById('ar-overlay');
+  overlay.classList.remove('hidden');
+  overlay.innerHTML = arOverlayHTML();
+  startAR();
 }
-
-function addFurniture(type){
-    if(!roomGroup) buildRoom();
-    const def = FURNITURE_TYPES.find(f => f.type === type);
-    const mesh = makeFurnitureMesh(def);
-    mesh.position.set((Math.random()-0.5)*1.2, 0, (Math.random()-0.5)*1.2);
-    roomGroup.add(mesh);
-    const id = 'obj_' + (objIdCounter++);
-    furnitureObjects.push({ id, type, label: def.label, mesh });
-    mesh.userData.objId = id;
-    refreshObjectList();
-    selectObjectById(id);
-    switchEditorTab('sub-objects');
-    document.querySelector('[data-sub="sub-objects"]').click();
-    showToast(def.label + ' ถูกวางในห้องแล้ว');
+function closeAR(){
+  stopAR();
+  const overlay = document.getElementById('ar-overlay');
+  overlay.classList.add('hidden');
+  overlay.innerHTML='';
 }
-
-function buildFurniturePalette(){
-    const wrap = document.getElementById('furniture-palette');
-    wrap.innerHTML = '';
-    FURNITURE_TYPES.forEach(def => {
-        const btn = document.createElement('button');
-        btn.className = 'furn-btn bg-gray-50 border rounded-xl p-3 flex flex-col items-center space-y-1 hover:bg-indigo-50 transition';
-        btn.innerHTML = `<i class="fa-solid ${def.icon} text-xl text-indigo-600"></i><span class="text-[11px] font-bold text-gray-700">${def.label}</span>`;
-        btn.onclick = () => addFurniture(def.type);
-        wrap.appendChild(btn);
-    });
+function arOverlayHTML(){
+  const names = arState.productIds.map(id=>findProduct(id).name).join(', ');
+  return `
+  <div class="absolute inset-0 bg-black">
+    <video id="ar-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover"></video>
+    <canvas id="ar-canvas" class="absolute inset-0 w-full h-full"></canvas>
+    <div class="absolute top-0 left-0 right-0 flex items-center justify-between p-4">
+      <button onclick="closeAR()" class="w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center text-lg">✕</button>
+      <div id="ar-mode-badge" class="chip bg-black/50 text-white">กำลังเปิดกล้อง...</div>
+    </div>
+    <div class="absolute bottom-0 left-0 right-0 p-4 space-y-2.5">
+      <div class="bg-black/55 rounded-2xl p-3 text-white text-[12px] leading-relaxed" id="ar-hint">
+        กำลังแสดง: ${names} · ลากบนหน้าจอเพื่อขยับตำแหน่ง
+      </div>
+      <div class="flex items-center gap-3 bg-black/55 rounded-2xl p-3">
+        <span class="text-white text-xs w-14 shrink-0">หมุน</span>
+        <input id="ar-rotate" type="range" min="0" max="360" value="0" class="flex-1" oninput="arSetRotation(this.value)">
+      </div>
+      <div class="flex items-center gap-3 bg-black/55 rounded-2xl p-3">
+        <span class="text-white text-xs w-14 shrink-0">ขนาด</span>
+        <input id="ar-scale" type="range" min="50" max="150" value="100" class="flex-1" oninput="arSetScale(this.value)">
+      </div>
+    </div>
+  </div>`;
 }
-
-function refreshObjectList(){
-    const list = document.getElementById('object-list');
-    if(furnitureObjects.length === 0){
-        list.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ยังไม่มีเฟอร์นิเจอร์ในห้อง</p>';
-        return;
-    }
-    list.innerHTML = '';
-    furnitureObjects.forEach(obj => {
-        const row = document.createElement('div');
-        row.className = 'obj-row flex items-center justify-between border rounded-lg px-3 py-2 cursor-pointer' + (selectedObject && selectedObject.id === obj.id ? ' active' : '');
-        row.innerHTML = `<span class="text-xs font-bold text-gray-700">${obj.label}</span><i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>`;
-        row.onclick = () => selectObjectById(obj.id);
-        list.appendChild(row);
-    });
+function buildARFurnitureGroup(){
+  const group = new THREE.Group();
+  const n = arState.productIds.length;
+  const cols = 3, spacing = 0.9;
+  const startX = -((Math.min(cols,n)-1)*spacing)/2;
+  arState.productIds.forEach((id,idx)=>{
+    const p = findProduct(id);
+    const [dx,dy,dz] = p.dims;
+    const geo = new THREE.BoxGeometry(dx,dy,dz);
+    const mat = new THREE.MeshStandardMaterial({color:p.color});
+    const mesh = new THREE.Mesh(geo,mat);
+    const col = idx % cols, row = Math.floor(idx/cols);
+    mesh.position.set(startX+col*spacing, dy/2, -row*0.9);
+    group.add(mesh);
+  });
+  return group;
 }
-
-function selectObjectById(id){
-    const obj = furnitureObjects.find(o => o.id === id);
-    if(!obj) return;
-    selectedObject = obj;
-    document.getElementById('selected-controls').classList.remove('hidden');
-    document.getElementById('selected-name').textContent = obj.label;
-    document.getElementById('pos-x').value = obj.mesh.position.x;
-    document.getElementById('pos-z').value = obj.mesh.position.z;
-    refreshObjectList();
-}
-
-function onCanvasClick(event){
-    if(!roomGroup || furnitureObjects.length === 0) return;
-    const rect = renderer.domElement.getBoundingClientRect();
-    pointer.x = ((event.clientX - rect.left)/rect.width)*2 - 1;
-    pointer.y = -((event.clientY - rect.top)/rect.height)*2 + 1;
-    raycaster.setFromCamera(pointer, camera);
-    const meshes = furnitureObjects.map(o => o.mesh);
-    const hits = raycaster.intersectObjects(meshes, true);
-    if(hits.length){
-        let g = hits[0].object;
-        while(g.parent && !g.userData.objId) g = g.parent;
-        if(g.userData.objId) selectObjectById(g.userData.objId);
-    }
-}
-
-function moveSelected(){
-    if(!selectedObject) return;
-    selectedObject.mesh.position.x = parseFloat(document.getElementById('pos-x').value);
-    selectedObject.mesh.position.z = parseFloat(document.getElementById('pos-z').value);
-}
-function rotateSelected(){
-    if(!selectedObject) return;
-    selectedObject.mesh.rotation.y += Math.PI/4;
-}
-function deleteSelected(){
-    if(!selectedObject) return;
-    roomGroup.remove(selectedObject.mesh);
-    furnitureObjects = furnitureObjects.filter(o => o.id !== selectedObject.id);
-    selectedObject = null;
-    document.getElementById('selected-controls').classList.add('hidden');
-    refreshObjectList();
-    showToast('ลบเฟอร์นิเจอร์แล้ว');
-}
-
-function setCameraView(mode){
-    if(!roomGroup) return;
-    const w = parseFloat(document.getElementById('room-width').value);
-    const d = parseFloat(document.getElementById('room-depth').value);
-    if(mode === 'top'){
-        camera.position.set(0, Math.max(w,d)*1.6, 0.01);
-    } else {
-        camera.position.set(Math.max(w,d)*0.9, 1.6, Math.max(w,d)*0.9);
-    }
-    controls.update();
-}
-
-// ---------- Style presets ----------
-const STYLES = [
-    { name:'มินิมอล', wall:'#f1efe9', floor:'#d9c9a8', furniture:['bed','wardrobe','lamp'] },
-    { name:'สแกนดิเนเวียน', wall:'#f7f5f0', floor:'#e6d3ae', furniture:['sofa','table','plant'] },
-    { name:'หรูโทนเข้ม', wall:'#2b2b2e', floor:'#3d3327', furniture:['sofa','tv','lamp'] },
-    { name:'อินดัสเทรียล', wall:'#8a8f94', floor:'#5b5b5b', furniture:['desk','chair','plant'] },
-    { name:'ญี่ปุ่น (Japandi)', wall:'#e7e0d3', floor:'#b89468', furniture:['bed','table','plant'] },
-    { name:'วินเทจ', wall:'#e3cdb0', floor:'#7a4f30', furniture:['sofa','table','wardrobe'] }
-];
-function buildStyleGrid(){
-    const grid = document.getElementById('style-grid');
-    grid.innerHTML = '';
-    STYLES.forEach(s => {
-        const card = document.createElement('div');
-        card.className = 'style-card border rounded-xl p-3 cursor-pointer';
-        card.innerHTML = `
-            <div class="flex space-x-1 mb-2">
-                <div class="w-1/2 h-8 rounded" style="background:${s.wall}"></div>
-                <div class="w-1/2 h-8 rounded" style="background:${s.floor}"></div>
-            </div>
-            <p class="text-xs font-bold text-gray-700">${s.name}</p>`;
-        card.onclick = () => applyStyle(s);
-        grid.appendChild(card);
-    });
-}
-function applyStyle(style){
-    if(!roomGroup) buildRoom();
-    document.getElementById('wall-color').value = style.wall;
-    document.getElementById('floor-color').value = style.floor;
-    updateMaterials();
-    furnitureObjects.forEach(o => roomGroup.remove(o.mesh));
-    furnitureObjects = [];
-    style.furniture.forEach((type, i) => {
-        const def = FURNITURE_TYPES.find(f => f.type === type);
-        const mesh = makeFurnitureMesh(def);
-        const w = parseFloat(document.getElementById('room-width').value);
-        const d = parseFloat(document.getElementById('room-depth').value);
-        mesh.position.set((i - (style.furniture.length-1)/2) * Math.min(1.4, w/(style.furniture.length+1)), 0, d/2 - 1);
-        roomGroup.add(mesh);
-        const id = 'obj_' + (objIdCounter++);
-        mesh.userData.objId = id;
-        furnitureObjects.push({ id, type, label: def.label, mesh });
-    });
-    refreshObjectList();
-    toggleModal('modal-styles');
-    showToast('ใช้สไตล์ "' + style.name + '" แล้ว');
-}
-
-// ---------- AI prompt (rule-based) ----------
-function fillPrompt(text){
-    document.getElementById('ai-prompt').value = text;
-}
-function runAIDesign(){
-    const text = document.getElementById('ai-prompt').value.trim();
-    if(!text){ showToast('กรุณาอธิบายห้องที่ต้องการก่อน'); return; }
-    const t = text.toLowerCase();
-    let style;
-    if(t.includes('หรู') || t.includes('เข้ม') || t.includes('ทอง')) style = STYLES[2];
-    else if(t.includes('สแกน') || t.includes('scandi')) style = STYLES[1];
-    else if(t.includes('ปูน') || t.includes('อินดัส') || t.includes('industrial')) style = STYLES[3];
-    else if(t.includes('ญี่ปุ่น') || t.includes('japandi') || t.includes('เซน')) style = STYLES[4];
-    else if(t.includes('วินเทจ') || t.includes('vintage')) style = STYLES[5];
-    else style = STYLES[0];
-
-    if(t.includes('นั่งเล่น') || t.includes('รับแขก')) style = {...style, furniture:['sofa','table','tv','plant']};
-    else if(t.includes('นอน')) style = {...style, furniture:['bed','wardrobe','lamp']};
-    else if(t.includes('ทำงาน') || t.includes('ออฟฟิศ')) style = {...style, furniture:['desk','chair','plant']};
-
-    toggleModal('modal-ai');
-    applyStyle(style);
-    showToast('AI ออกแบบห้องตามคำสั่งของคุณเรียบร้อย');
-}
-
-// ---------- Save / export ----------
-function serializeRoom(){
-    return {
-        width: parseFloat(document.getElementById('room-width').value),
-        depth: parseFloat(document.getElementById('room-depth').value),
-        height: parseFloat(document.getElementById('room-height').value),
-        wallColor: document.getElementById('wall-color').value,
-        floorColor: document.getElementById('floor-color').value,
-        furniture: furnitureObjects.map(o => ({
-            type: o.type,
-            x: o.mesh.position.x, y: o.mesh.position.y, z: o.mesh.position.z,
-            rotationY: o.mesh.rotation.y
-        }))
-    };
-}
-function saveProject(){
-    const name = document.getElementById('save-name').value.trim() || 'โปรเจกต์ไม่มีชื่อ';
-    const data = serializeRoom();
+async function startAR(){
+  if(navigator.xr){
     try{
-        const key = 'room_project_' + Date.now();
-        localStorage.setItem(key, JSON.stringify({ name, data, savedAt: new Date().toISOString() }));
-        showToast('บันทึกโครงการ "' + name + '" แล้ว');
-    }catch(e){
-        showToast('ไม่สามารถบันทึกได้ในอุปกรณ์นี้');
-    }
-    toggleModal('modal-save');
+      const supported = await navigator.xr.isSessionSupported('immersive-ar');
+      if(supported){ await startWebXR(); return; }
+    }catch(e){ /* fall through to camera fallback */ }
+  }
+  await startCameraFallback();
 }
-function exportImage(){
-    if(!renderer){ showToast('ยังไม่มีห้องให้ส่งออก'); return; }
-    renderer.render(scene, camera);
-    const link = document.createElement('a');
-    link.download = 'room-design.png';
-    link.href = renderer.domElement.toDataURL('image/png');
-    link.click();
-    toggleModal('modal-export');
+async function startWebXR(){
+  const badge = document.getElementById('ar-mode-badge');
+  if(badge) badge.textContent = 'โหมด AR เต็มรูปแบบ';
+  const video = document.getElementById('ar-video');
+  if(video) video.style.display = 'none';
+  const canvas = document.getElementById('ar-canvas');
+  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.xr.enabled = true;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera();
+  const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+  scene.add(light);
+
+  const group = buildARFurnitureGroup();
+  group.position.set(0,0,-1.4);
+  scene.add(group);
+  arState.group = group; arState.renderer = renderer; arState.scene = scene; arState.camera = camera;
+
+  try{
+    const session = await navigator.xr.requestSession('immersive-ar', {optionalFeatures:['dom-overlay','local-floor'], domOverlay:{root:document.getElementById('ar-overlay')}});
+    renderer.xr.setReferenceSpaceType('local');
+    await renderer.xr.setSession(session);
+    arState.xrSession = session;
+    session.addEventListener('end', ()=>{ arState.xrSession=null; });
+    session.addEventListener('select', ()=>{
+      const dir = new THREE.Vector3(0,0,-1.4).applyQuaternion(camera.quaternion);
+      group.position.copy(camera.position).add(dir);
+    });
+    renderer.setAnimationLoop(()=>{ renderer.render(scene, camera); });
+    const hint = document.getElementById('ar-hint');
+    if(hint) hint.textContent += ' · แตะหน้าจอเพื่อวางเฟอร์นิเจอร์ตรงหน้าคุณ';
+  }catch(e){
+    await startCameraFallback();
+  }
 }
-function exportJSON(){
-    const data = serializeRoom();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
-    const link = document.createElement('a');
-    link.download = 'room-design.json';
-    link.href = URL.createObjectURL(blob);
-    link.click();
-    toggleModal('modal-export');
+async function startCameraFallback(){
+  const badge = document.getElementById('ar-mode-badge');
+  if(badge) badge.textContent = 'โหมดกล้อง (พรีวิว)';
+  const video = document.getElementById('ar-video');
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false});
+    video.srcObject = stream;
+    arState.stream = stream;
+  }catch(e){
+    const hint = document.getElementById('ar-hint');
+    if(hint) hint.textContent = 'ไม่สามารถเข้าถึงกล้องได้ (ต้องเปิดผ่าน HTTPS หรือ localhost และอนุญาตสิทธิ์กล้อง) — แสดงพื้นหลังจำลองแทน';
+    if(video) video.style.display='none';
+  }
+  const canvas = document.getElementById('ar-canvas');
+  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  const w = canvas.clientWidth || 400, h = canvas.clientHeight || 700;
+  renderer.setSize(w,h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, w/h, 0.1, 50);
+  camera.position.set(0,1.2,3);
+  camera.lookAt(0,0.5,0);
+  const light = new THREE.HemisphereLight(0xffffff,0x444444,1.3);
+  scene.add(light);
+  const group = buildARFurnitureGroup();
+  group.position.set(0,0,0);
+  scene.add(group);
+  arState.group = group; arState.renderer = renderer; arState.scene = scene; arState.camera = camera;
+
+  const onDown = (x,y)=>{ arState.dragging=true; arState.lastX=x; arState.lastY=y; };
+  const onMoveFn = (x,y)=>{
+    if(!arState.dragging) return;
+    const dx=(x-arState.lastX)/w, dy=(y-arState.lastY)/h;
+    group.position.x += dx*4;
+    group.position.z += dy*4;
+    arState.lastX=x; arState.lastY=y;
+  };
+  const onUpFn = ()=>{ arState.dragging=false; };
+  canvas.addEventListener('mousedown', e=>onDown(e.clientX,e.clientY));
+  window.addEventListener('mousemove', e=>onMoveFn(e.clientX,e.clientY));
+  window.addEventListener('mouseup', onUpFn);
+  canvas.addEventListener('touchstart', e=>{const t=e.touches[0]; onDown(t.clientX,t.clientY);}, {passive:true});
+  canvas.addEventListener('touchmove', e=>{const t=e.touches[0]; onMoveFn(t.clientX,t.clientY);}, {passive:true});
+  canvas.addEventListener('touchend', onUpFn);
+  arState._onMove = onMoveFn; arState._onUp = onUpFn;
+
+  function loop(){ arState.raf = requestAnimationFrame(loop); renderer.render(scene,camera); }
+  loop();
+}
+function arSetRotation(val){ if(arState.group) arState.group.rotation.y = (val/180)*Math.PI; }
+function arSetScale(val){ if(arState.group){ const s = val/100; arState.group.scale.set(s,s,s); } }
+function stopAR(){
+  if(arState.raf) cancelAnimationFrame(arState.raf);
+  if(arState.stream) arState.stream.getTracks().forEach(t=>t.stop());
+  if(arState.xrSession){ try{ arState.xrSession.end(); }catch(e){} }
+  if(arState.renderer){ try{ arState.renderer.setAnimationLoop(null); }catch(e){} }
+  if(arState._onMove) window.removeEventListener('mousemove', arState._onMove);
+  if(arState._onUp) window.removeEventListener('mouseup', arState._onUp);
+  arState = { productIds:[], renderer:null, scene:null, camera:null, group:null, raf:null, stream:null, xrSession:null, dragging:false, lastX:0, lastY:0, _onMove:null, _onUp:null };
 }
 
-// ---------- Init ----------
-buildFurniturePalette();
-buildStyleGrid();
-document.querySelectorAll('.editor-tab-btn')[2].addEventListener('click', () => switchEditorTab('sub-objects'));
-document.querySelectorAll('.editor-tab-btn')[1].addEventListener('click', () => switchEditorTab('sub-furniture'));
-document.querySelectorAll('.editor-tab-btn')[0].addEventListener('click', () => switchEditorTab('sub-room'));
+/* =========================================================
+   CUSTOMER: CART / CHECKOUT
+========================================================= */
+function renderCart(){
+  const customer = findCustomer(state.customerIdView);
+  const items = state.cart.map(i=>({...i, product:findProduct(i.productId)}));
+  const totalWeight = items.reduce((s,i)=>s+i.product.weight*i.qty,0);
+  const productTotal = items.reduce((s,i)=>s+i.product.price*i.qty,0);
+  const shipping = calcShipping(totalWeight, customer.distance);
+
+  return `
+  <div class="px-4 pt-4 pb-6">
+    <div class="card p-3 mb-4 flex items-center justify-between">
+      <div>
+        <div class="text-[11px] text-[var(--ink-soft)]">จัดส่งในนามลูกค้า</div>
+        <div class="font-semibold text-sm">${customer.name} · ${customer.distance} กม.</div>
+      </div>
+      <select onchange="state.customerIdView=this.value;render()" class="text-sm border border-[var(--line)] rounded-lg px-2 py-1.5 bg-white">
+        ${db.customers.map(c=>`<option value="${c.id}" ${c.id===state.customerIdView?'selected':''}>${c.name}</option>`).join('')}
+      </select>
+    </div>
+
+    ${items.length===0?`<div class="text-center py-16 text-[var(--ink-soft)]"><div class="text-4xl mb-2">🛒</div>ตะกร้าว่างอยู่</div>`:`
+    <div class="space-y-2.5 mb-4">
+      ${items.map(i=>`
+        <div class="card p-3 flex items-center gap-3">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center text-xl shrink-0" style="background:var(--accent-soft)">🪑</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[13px] font-medium truncate">${i.product.name}</div>
+            <div class="text-[12px] text-[var(--accent)] font-semibold">฿${fmt(i.product.price)}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="changeQty('${i.productId}',-1)" class="w-7 h-7 rounded-full bg-[var(--line)] font-semibold">−</button>
+            <span class="w-5 text-center text-sm font-medium">${i.qty}</span>
+            <button onclick="changeQty('${i.productId}',1)" class="w-7 h-7 rounded-full bg-[var(--line)] font-semibold">＋</button>
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <div class="card p-4 space-y-1.5 mb-4">
+      <div class="font-display font-semibold text-sm mb-1.5">สรุปการคำนวณอัตโนมัติ</div>
+      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">ยอดสินค้า</span><span>฿${fmt(productTotal)}</span></div>
+      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">น้ำหนักรวม</span><span>${totalWeight} กก.</span></div>
+      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">ระยะทางจัดส่ง</span><span>${customer.distance} กม.</span></div>
+      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">ค่าขนส่ง (อัตโนมัติ)</span><span>฿${fmt(shipping)}</span></div>
+      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">คาร์บอนฟุตพริ้นท์โดยประมาณ</span><span>${Math.round(customer.distance*CO2_FACTOR_KG_PER_KM*10)/10} กก. CO₂</span></div>
+      <div class="h-px bg-[var(--line)] my-2"></div>
+      <div class="flex justify-between font-semibold"><span>ยอดชำระทั้งหมด</span><span class="text-[var(--accent)]">฿${fmt(productTotal+shipping)}</span></div>
+    </div>
+    <button onclick="checkout()" class="w-full btn-accent font-semibold rounded-2xl py-3.5">ยืนยันคำสั่งซื้อและชำระเงิน</button>
+    `}
+  </div>`;
+}
+function changeQty(productId, delta){
+  const item = state.cart.find(i=>i.productId===productId);
+  item.qty += delta;
+  if(item.qty<=0) state.cart = state.cart.filter(i=>i.productId!==productId);
+  render();
+}
+function checkout(){
+  if(state.cart.length===0) return;
+  const order = buildOrder(state.customerIdView, state.cart.map(i=>({...i})));
+  state.cart = [];
+  toast(`สั่งซื้อสำเร็จ! หมายเลขออเดอร์ ${order.id}`,'success');
+  navigateTo('orders');
+}
+
+/* =========================================================
+   CUSTOMER: ORDERS + TRACKING
+========================================================= */
+function renderCustomerOrders(){
+  const orders = db.orders.filter(o=>o.customerId===state.customerIdView);
+  return `
+  <div class="px-4 pt-4 pb-6">
+    <div class="card p-3 mb-4 flex items-center justify-between">
+      <div class="text-[11px] text-[var(--ink-soft)]">แสดงคำสั่งซื้อของ</div>
+      <select onchange="state.customerIdView=this.value;render()" class="text-sm border border-[var(--line)] rounded-lg px-2 py-1.5 bg-white">
+        ${db.customers.map(c=>`<option value="${c.id}" ${c.id===state.customerIdView?'selected':''}>${c.name}</option>`).join('')}
+      </select>
+    </div>
+    ${orders.length===0?`<div class="text-center py-16 text-[var(--ink-soft)]">ยังไม่มีคำสั่งซื้อ</div>`:
+    orders.map(o=>orderCard(o,true)).join('')}
+  </div>`;
+}
+function orderCard(o, showDetail){
+  const meta = STATUS_META[o.status];
+  return `
+  <button onclick="${showDetail?`openOrderDetail('${o.id}')`:''}" class="card w-full text-left p-3.5 mb-2.5 block">
+    <div class="flex items-center justify-between mb-1.5">
+      <span class="font-semibold text-sm">#${o.id}</span>
+      <span class="chip" style="background:${meta.soft};color:${meta.color}">${meta.label}</span>
+    </div>
+    <div class="text-[12.5px] text-[var(--ink-soft)]">${o.items.length} รายการ · น้ำหนัก ${o.totalWeight} กก. · ฿${fmt(o.grandTotal)}</div>
+  </button>`;
+}
+function openOrderDetail(orderId){
+  const o = db.orders.find(x=>x.id===orderId);
+  const customer = findCustomer(o.customerId);
+  const steps = ['new','pending','in_transit', o.status==='failed'?'failed':'delivered'];
+  openModal(`
+    <h3 class="font-display font-semibold text-lg mb-0.5">คำสั่งซื้อ #${o.id}</h3>
+    <p class="text-sm text-[var(--ink-soft)] mb-4">${customer.name} · ${customer.address}</p>
+    <div class="space-y-4 mb-5">
+      ${steps.map((s,idx)=>{
+        const meta = STATUS_META[s];
+        const done = o.timeline.find(t=>t.status===s);
+        const isLast = idx===steps.length-1;
+        return `<div class="relative pl-8 ${isLast?'':'pb-1'}">
+          ${!isLast?'<div class="stepper-line"></div>':''}
+          <div class="absolute left-0 top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-xs" style="background:${done?meta.color:'var(--line)'};color:${done?'#fff':'var(--ink-soft)'}">${idx+1}</div>
+          <div class="text-sm font-medium" style="color:${done?'var(--ink)':'var(--ink-soft)'}">${meta.label}</div>
+          <div class="text-[11px] text-[var(--ink-soft)]">${done?done.time:'รอดำเนินการ'}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="card p-3.5 space-y-1.5">
+      ${o.items.map(i=>`<div class="flex justify-between text-sm"><span>${findProduct(i.productId).name} × ${i.qty}</span><span>฿${fmt(findProduct(i.productId).price*i.qty)}</span></div>`).join('')}
+      <div class="h-px bg-[var(--line)] my-1.5"></div>
+      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">ค่าขนส่ง</span><span>฿${fmt(o.shippingCost)}</span></div>
+      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">คาร์บอนฟุตพริ้นท์การจัดส่ง</span><span>${o.co2} กก. CO₂</span></div>
+      <div class="flex justify-between font-semibold"><span>รวมทั้งหมด</span><span class="text-[var(--accent)]">฿${fmt(o.grandTotal)}</span></div>
+    </div>
+  `);
+}
+
+/* =========================================================
+   ADMIN: DASHBOARD
+========================================================= */
+function renderDashboard(){
+  const delivered = db.orders.filter(o=>o.status==='delivered');
+  const failed = db.orders.filter(o=>o.status==='failed');
+  const revenue = delivered.reduce((s,o)=>s+o.grandTotal,0);
+  const successRate = (delivered.length+failed.length)===0 ? 0 : Math.round(delivered.length/(delivered.length+failed.length)*100);
+  const lowStock = db.products.filter(p=>p.stock<=3);
+  const chart = [4,6,3,7,5,8, delivered.length];
+  const maxC = Math.max(...chart,1);
+  const co2Saved = computeFleetCO2Savings();
+  const avgRecycled = Math.round(db.products.reduce((s,p)=>s+(p.recycledPct||0),0)/db.products.length);
+
+  return `
+  <div class="px-4 pt-4 pb-6">
+    ${lowStock.length? `<div class="rounded-2xl p-3 mb-4 flex items-start gap-2.5" style="background:var(--danger-soft)">
+      <span class="text-lg">⚠️</span>
+      <div class="text-[13px]" style="color:var(--danger)"><b>สต็อกใกล้หมด:</b> ${lowStock.map(p=>p.name).join(', ')}</div>
+    </div>`:''}
+
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="card p-3.5">
+        <div class="text-[11.5px] text-[var(--ink-soft)] mb-1">ส่งสำเร็จวันนี้</div>
+        <div class="font-display font-semibold text-2xl">${delivered.length}</div>
+      </div>
+      <div class="card p-3.5">
+        <div class="text-[11.5px] text-[var(--ink-soft)] mb-1">อัตราส่งสำเร็จ</div>
+        <div class="font-display font-semibold text-2xl" style="color:var(--success)">${successRate}%</div>
+      </div>
+      <div class="card p-3.5 col-span-2">
+        <div class="text-[11.5px] text-[var(--ink-soft)] mb-1">รายได้รวม (ออเดอร์ที่จัดส่งสำเร็จ)</div>
+        <div class="font-display font-semibold text-2xl" style="color:var(--accent)">฿${fmt(revenue)}</div>
+      </div>
+    </div>
+
+    <div class="card p-4 mb-4">
+      <div class="font-display font-semibold text-sm mb-3">ยอดจัดส่งย้อนหลัง 7 วัน</div>
+      <div class="bar-wrap">
+        ${chart.map((v,i)=>`<div class="bar ${i===chart.length-1?'today':''}" style="height:${(v/maxC*100)}%"></div>`).join('')}
+      </div>
+      <div class="flex justify-between text-[10.5px] text-[var(--ink-soft)] mt-1.5">
+        <span>-6 วัน</span><span>วันนี้</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="card p-3.5" style="background:var(--success-soft)">
+        <div class="text-[11px]" style="color:var(--success)">CO₂ ประหยัดได้จากเส้นทางอัจฉริยะวันนี้</div>
+        <div class="font-display font-semibold text-xl mt-0.5" style="color:var(--success)">${co2Saved.toFixed(1)} กก.</div>
+      </div>
+      <div class="card p-3.5">
+        <div class="text-[11px] text-[var(--ink-soft)]">วัสดุรีไซเคิลเฉลี่ยของสินค้า</div>
+        <div class="font-display font-semibold text-xl mt-0.5">${avgRecycled}%</div>
+      </div>
+    </div>
+
+    <div class="font-display font-semibold text-sm mb-2">งานที่ต้องดำเนินการ</div>
+    ${db.orders.filter(o=>o.status==='new'||o.status==='pending').slice(0,3).map(o=>orderCard(o,false)).join('') || `<p class="text-sm text-[var(--ink-soft)]">ไม่มีงานค้าง</p>`}
+  </div>`;
+}
+
+/* =========================================================
+   ADMIN: PRODUCTS
+========================================================= */
+function renderProductsAdmin(){
+  return `
+  <div class="px-4 pt-4 pb-6">
+    <button onclick="openProductForm()" class="w-full btn-primary font-semibold rounded-2xl py-2.5 mb-4">＋ เพิ่มสินค้าใหม่</button>
+    <div class="space-y-2.5">
+    ${db.products.map(p=>`
+      <div class="card p-3 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-lg flex items-center justify-center text-xl shrink-0" style="background:var(--accent-soft)">🪑</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-[13px] font-medium truncate">${p.name}</div>
+          <div class="text-[11.5px] text-[var(--ink-soft)]">${p.category} · ${p.weight} กก. · ฿${fmt(p.price)}</div>
+          ${p.recycledPct?`<div class="text-[10px] mt-0.5" style="color:var(--success)">♻️ วัสดุรีไซเคิล ${p.recycledPct}%</div>`:''}
+        </div>
+        <div class="text-right shrink-0">
+          <div class="text-[12px] font-semibold ${p.stock<=3?'text-[var(--danger)]':''}">คงเหลือ ${p.stock}</div>
+          <button onclick="openProductForm('${p.id}')" class="text-[12px] text-[var(--primary)] font-medium mt-0.5">แก้ไข</button>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+function openProductForm(productId){
+  const p = productId ? findProduct(productId) : null;
+  openModal(`
+    <h3 class="font-display font-semibold text-lg mb-4">${p?'แก้ไขสินค้า':'เพิ่มสินค้าใหม่'}</h3>
+    <div class="space-y-3">
+      <div><label class="text-[12px] text-[var(--ink-soft)]">ชื่อสินค้า</label>
+        <input id="f-name" value="${p?p.name:''}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
+      <div><label class="text-[12px] text-[var(--ink-soft)]">หมวดหมู่</label>
+        <input id="f-cat" value="${p?p.category:''}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-[12px] text-[var(--ink-soft)]">ราคา (บาท)</label>
+          <input id="f-price" type="number" value="${p?p.price:''}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
+        <div><label class="text-[12px] text-[var(--ink-soft)]">น้ำหนัก (กก.)</label>
+          <input id="f-weight" type="number" value="${p?p.weight:''}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
+      </div>
+      <div><label class="text-[12px] text-[var(--ink-soft)]">จำนวนคงเหลือ</label>
+        <input id="f-stock" type="number" value="${p?p.stock:''}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
+      <div><label class="text-[12px] text-[var(--ink-soft)]">% วัสดุรีไซเคิล</label>
+        <input id="f-recycled" type="number" min="0" max="100" value="${p?p.recycledPct:0}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
+      <div><label class="text-[12px] text-[var(--ink-soft)]">วัสดุ / คำอธิบายความยั่งยืน</label>
+        <input id="f-material" value="${p?(p.material||''):''}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
+    </div>
+    <div class="flex gap-2.5 mt-5">
+      ${p?`<button onclick="deleteProduct('${p.id}')" class="flex-1 rounded-2xl py-3 font-semibold" style="background:var(--danger-soft);color:var(--danger)">ลบสินค้า</button>`:''}
+      <button onclick="saveProduct('${p?p.id:''}')" class="flex-1 btn-primary rounded-2xl py-3 font-semibold">บันทึก</button>
+    </div>
+  `);
+}
+function saveProduct(productId){
+  const name = document.getElementById('f-name').value.trim();
+  const category = document.getElementById('f-cat').value.trim() || 'ทั่วไป';
+  const price = Number(document.getElementById('f-price').value)||0;
+  const weight = Number(document.getElementById('f-weight').value)||0;
+  const stock = Number(document.getElementById('f-stock').value)||0;
+  const recycledPct = Math.max(0, Math.min(100, Number(document.getElementById('f-recycled').value)||0));
+  const material = document.getElementById('f-material').value.trim();
+  if(!name){ toast('กรุณากรอกชื่อสินค้า','warn'); return; }
+  if(productId){
+    const p = findProduct(productId);
+    Object.assign(p,{name,category,price,weight,stock,recycledPct,material});
+    toast('บันทึกการแก้ไขแล้ว','success');
+  } else {
+    db.products.push({id:'P'+Date.now(), name, category, price, weight, stock, color:0x8B5E34, dims:[1,0.8,0.6], recycledPct, material});
+    toast('เพิ่มสินค้าใหม่แล้ว','success');
+  }
+  closeModal(); render();
+}
+function deleteProduct(productId){
+  db.products = db.products.filter(p=>p.id!==productId);
+  closeModal(); render();
+  toast('ลบสินค้าแล้ว');
+}
+
+/* =========================================================
+   ADMIN: ORDERS
+========================================================= */
+function renderOrdersAdmin(){
+  const tabs = [['all','ทั้งหมด'],['new','ใหม่'],['pending','รอรับ'],['in_transit','กำลังส่ง'],['delivered','สำเร็จ'],['failed','ไม่สำเร็จ']];
+  const orders = db.orders.filter(o=> state.orderTab==='all' || o.status===state.orderTab);
+  return `
+  <div class="pt-4 pb-6">
+    <div class="flex gap-2 overflow-x-auto scrollbar-x px-4 pb-3">
+      ${tabs.map(([k,l])=>`<button onclick="state.orderTab='${k}';render()" class="shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium ${state.orderTab===k?'btn-primary':'bg-white border border-[var(--line)] text-[var(--ink-soft)]'}">${l}</button>`).join('')}
+    </div>
+    <div class="px-4">
+      ${orders.length===0?`<p class="text-sm text-[var(--ink-soft)] text-center py-10">ไม่มีคำสั่งซื้อในสถานะนี้</p>`:
+      orders.map(o=>adminOrderCard(o)).join('')}
+    </div>
+  </div>`;
+}
+function adminOrderCard(o){
+  const meta = STATUS_META[o.status];
+  const customer = findCustomer(o.customerId);
+  return `
+  <button onclick="openAdminOrderDetail('${o.id}')" class="card w-full text-left p-3.5 mb-2.5 block">
+    <div class="flex items-center justify-between mb-1">
+      <span class="font-semibold text-sm">#${o.id}</span>
+      <span class="chip" style="background:${meta.soft};color:${meta.color}">${meta.label}</span>
+    </div>
+    <div class="text-[12.5px] text-[var(--ink-soft)]">${customer.name} · ${o.totalWeight} กก. · ฿${fmt(o.grandTotal)}</div>
+    ${o.driverId?`<div class="text-[11.5px] text-[var(--ink-soft)] mt-0.5">คนขับ: ${findDriver(o.driverId).name}</div>`:`<div class="text-[11.5px] text-[var(--warn)] mt-0.5 font-medium">ยังไม่มอบหมายคนขับ</div>`}
+  </button>`;
+}
+function openAdminOrderDetail(orderId){
+  const o = db.orders.find(x=>x.id===orderId);
+  const customer = findCustomer(o.customerId);
+  const availableDrivers = db.drivers;
+  const tripCost = calcTripCost(o.distance);
+  openModal(`
+    <h3 class="font-display font-semibold text-lg mb-0.5">คำสั่งซื้อ #${o.id}</h3>
+    <p class="text-sm text-[var(--ink-soft)] mb-4">${customer.name} · ${customer.address} (${o.distance} กม.)</p>
+
+    <div class="card p-3.5 space-y-1.5 mb-4">
+      ${o.items.map(i=>`<div class="flex justify-between text-sm"><span>${findProduct(i.productId).name} × ${i.qty}</span><span>฿${fmt(findProduct(i.productId).price*i.qty)}</span></div>`).join('')}
+      <div class="h-px bg-[var(--line)] my-1.5"></div>
+      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">น้ำหนักรวม</span><span>${o.totalWeight} กก.</span></div>
+      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">ค่าขนส่งเรียกเก็บลูกค้า</span><span>฿${fmt(o.shippingCost)}</span></div>
+      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">ต้นทุนต่อเที่ยว (โดยประมาณ)</span><span style="color:var(--accent)">฿${fmt(tripCost)}</span></div>
+      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">คาร์บอนฟุตพริ้นท์การจัดส่ง</span><span>${o.co2} กก. CO₂</span></div>
+      <div class="flex justify-between font-semibold"><span>ยอดขายรวม</span><span>฿${fmt(o.grandTotal)}</span></div>
+    </div>
+
+    <div class="mb-4">
+      <label class="text-[12px] text-[var(--ink-soft)]">มอบหมายคนขับ</label>
+      <select onchange="assignDriver('${o.id}', this.value)" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm">
+        <option value="">— ยังไม่เลือก —</option>
+        ${availableDrivers.map(d=>`<option value="${d.id}" ${o.driverId===d.id?'selected':''}>${d.name} (${d.status==='available'?'ว่าง':'ไม่ว่าง'})</option>`).join('')}
+      </select>
+    </div>
+
+    <div>
+      <label class="text-[12px] text-[var(--ink-soft)] mb-1.5 block">อัปเดตสถานะ</label>
+      <div class="grid grid-cols-2 gap-2">
+        ${Object.keys(STATUS_META).map(s=>`<button onclick="setOrderStatus('${o.id}','${s}')" class="py-2 rounded-xl text-sm font-medium border" style="border-color:${o.status===s?STATUS_META[s].color:'var(--line)'};background:${o.status===s?STATUS_META[s].soft:'white'};color:${o.status===s?STATUS_META[s].color:'var(--ink)'}">${STATUS_META[s].label}</button>`).join('')}
+      </div>
+    </div>
+  `);
+}
+function assignDriver(orderId, driverId){
+  const o = db.orders.find(x=>x.id===orderId);
+  o.driverId = driverId || null;
+  if(driverId && o.status==='new'){ o.status='pending'; o.timeline.push({status:'pending',time:nowLabel()}); }
+  addNotification(`ออเดอร์ #${o.id} มอบหมายให้คนขับ ${driverId?findDriver(driverId).name:'-'}`, ['inapp']);
+  toast('อัปเดตการมอบหมายงานแล้ว','success');
+  closeModal(); render();
+}
+function setOrderStatus(orderId, status){
+  const o = db.orders.find(x=>x.id===orderId);
+  if(o.status===status) return;
+  o.status = status;
+  o.timeline.push({status, time:nowLabel()});
+  const meta = STATUS_META[status];
+  addNotification(`ออเดอร์ #${o.id} เปลี่ยนสถานะเป็น "${meta.label}"`, status==='delivered'||status==='failed' ? ['line','email'] : ['inapp']);
+  toast(`อัปเดตสถานะเป็น "${meta.label}"`,'success');
+  closeModal(); render();
+}
+
+/* =========================================================
+   ADMIN: SMART ROUTE OPTIMIZATION
+========================================================= */
+function renderRoutesAdmin(){
+  const driverId = state.routeDriverId || db.drivers[0].id;
+  const stops = driverActiveStops(driverId);
+
+  let body;
+  if(stops.length===0){
+    body = `<div class="text-center py-16 text-[var(--ink-soft)]">คนขับคนนี้ยังไม่มีงานที่ต้องจัดเส้นทาง</div>`;
+  } else if(stops.length===1){
+    body = `
+    <div class="card p-3 mb-4">${renderRouteMapSVG(stops)}</div>
+    <p class="text-sm text-[var(--ink-soft)] text-center">มีจุดส่งเดียว ไม่จำเป็นต้องจัดลำดับเส้นทาง</p>`;
+  } else {
+    const naive = naiveRouteDistance(stops);
+    const {route, totalDist} = nearestNeighborRoute(stops);
+    const savedKm = Math.max(0, naive-totalDist);
+    const savedCO2 = savedKm*CO2_FACTOR_KG_PER_KM;
+    body = `
+    <div class="card p-3 mb-4">${renderRouteMapSVG(route)}</div>
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="card p-3"><div class="text-[11px] text-[var(--ink-soft)]">ระยะทางหลังปรับเส้นทาง</div><div class="font-display font-semibold text-xl">${totalDist.toFixed(1)} กม.</div></div>
+      <div class="card p-3"><div class="text-[11px] text-[var(--ink-soft)]">ประหยัดระยะทางได้</div><div class="font-display font-semibold text-xl" style="color:var(--success)">${savedKm.toFixed(1)} กม.</div></div>
+      <div class="card p-3 col-span-2" style="background:var(--success-soft)"><div class="text-[11px]" style="color:var(--success)">ลดการปล่อย CO₂ เทียบกับลำดับเดิม</div><div class="font-display font-semibold text-xl" style="color:var(--success)">${savedCO2.toFixed(1)} กก. CO₂</div></div>
+    </div>
+    <div class="font-display font-semibold text-sm mb-2">ลำดับจุดส่งที่แนะนำ</div>
+    <div class="space-y-2">
+    ${route.map((s,idx)=>`
+      <div class="card p-3 flex items-center gap-3">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold text-white shrink-0" style="background:var(--accent)">${idx+1}</div>
+        <div class="flex-1 min-w-0"><div class="text-[13px] font-medium truncate">${s.name}</div><div class="text-[11px] text-[var(--ink-soft)]">ออเดอร์ ${s.orders.map(o=>'#'+o).join(', ')}</div></div>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  return `
+  <div class="px-4 pt-4 pb-6">
+    <div class="card p-3 mb-4 flex items-center justify-between">
+      <div class="text-[11px] text-[var(--ink-soft)]">จัดเส้นทางให้คนขับ</div>
+      <select onchange="state.routeDriverId=this.value;render()" class="text-sm border border-[var(--line)] rounded-lg px-2 py-1.5 bg-white">
+        ${db.drivers.map(d=>`<option value="${d.id}" ${d.id===driverId?'selected':''}>${d.name}</option>`).join('')}
+      </select>
+    </div>
+    ${body}
+  </div>`;
+}
+
+/* =========================================================
+   ADMIN: MASTER DATA (customers / vehicles / drivers)
+========================================================= */
+function renderMaster(){
+  const tabs = [['customers','ลูกค้า'],['fleet','คนขับ & รถ']];
+  return `
+  <div class="pt-4 pb-6">
+    <div class="flex gap-2 px-4 mb-3">
+      ${tabs.map(([k,l])=>`<button onclick="state.masterTab='${k}';render()" class="flex-1 py-2 rounded-xl text-sm font-medium ${state.masterTab===k?'btn-primary':'bg-white border border-[var(--line)] text-[var(--ink-soft)]'}">${l}</button>`).join('')}
+    </div>
+    <div class="px-4">
+      ${state.masterTab==='customers'? renderCustomersMaster() : renderFleetMaster()}
+    </div>
+  </div>`;
+}
+function renderCustomersMaster(){
+  return `
+    <button onclick="openCustomerForm()" class="w-full btn-primary font-semibold rounded-2xl py-2.5 mb-3">＋ เพิ่มลูกค้าใหม่</button>
+    <div class="space-y-2.5">
+    ${db.customers.map(c=>`
+      <div class="card p-3">
+        <div class="font-medium text-sm">${c.name}</div>
+        <div class="text-[12px] text-[var(--ink-soft)]">${c.address} · ${c.distance} กม. · ${c.phone}</div>
+      </div>`).join('')}
+    </div>`;
+}
+function openCustomerForm(){
+  openModal(`
+    <h3 class="font-display font-semibold text-lg mb-4">เพิ่มลูกค้าใหม่</h3>
+    <div class="space-y-3">
+      <input id="c-name" placeholder="ชื่อ-นามสกุล" class="w-full border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm">
+      <input id="c-address" placeholder="ที่อยู่จัดส่ง" class="w-full border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm">
+      <div class="grid grid-cols-2 gap-3">
+        <input id="c-distance" type="number" placeholder="ระยะทาง (กม.)" class="w-full border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm">
+        <input id="c-phone" placeholder="เบอร์โทร" class="w-full border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm">
+      </div>
+    </div>
+    <button onclick="saveCustomer()" class="w-full btn-primary rounded-2xl py-3 font-semibold mt-5">บันทึกลูกค้า</button>
+  `);
+}
+function saveCustomer(){
+  const name = document.getElementById('c-name').value.trim();
+  const address = document.getElementById('c-address').value.trim();
+  const distance = Number(document.getElementById('c-distance').value)||1;
+  const phone = document.getElementById('c-phone').value.trim();
+  if(!name){ toast('กรุณากรอกชื่อลูกค้า','warn'); return; }
+  db.customers.push({id:'C'+Date.now(), name, address, distance, phone, coord:{x:(Math.random()*24-12), y:(Math.random()*24-12)}});
+  toast('เพิ่มลูกค้าใหม่แล้ว','success');
+  closeModal(); render();
+}
+function renderFleetMaster(){
+  return `
+    <div class="space-y-2.5">
+    ${db.drivers.map(d=>{
+      const v = findVehicle(d.vehicleId);
+      return `<div class="card p-3 flex items-center justify-between">
+        <div>
+          <div class="font-medium text-sm">${d.name}</div>
+          <div class="text-[12px] text-[var(--ink-soft)]">${v?v.name:'-'} · ความจุ ${v?v.capacity:'-'} กก.</div>
+        </div>
+        <button onclick="toggleDriverStatus('${d.id}')" class="chip" style="background:${d.status==='available'?'var(--success-soft)':'var(--warn-soft)'};color:${d.status==='available'?'var(--success)':'var(--warn)'}">${d.status==='available'?'ว่าง':'ไม่ว่าง'}</button>
+      </div>`;
+    }).join('')}
+    </div>`;
+}
+function toggleDriverStatus(driverId){
+  const d = findDriver(driverId);
+  d.status = d.status==='available'?'busy':'available';
+  render();
+}
+
+/* =========================================================
+   DRIVER: JOBS / HISTORY
+========================================================= */
+function driverSelector(){
+  return `
+  <div class="card p-3 mx-4 mt-4 mb-3 flex items-center justify-between">
+    <div class="text-[11px] text-[var(--ink-soft)]">คุณคือคนขับ</div>
+    <select onchange="state.driverIdView=this.value;render()" class="text-sm border border-[var(--line)] rounded-lg px-2 py-1.5 bg-white">
+      ${db.drivers.map(d=>`<option value="${d.id}" ${d.id===state.driverIdView?'selected':''}>${d.name}</option>`).join('')}
+    </select>
+  </div>`;
+}
+function renderDriverRoutePanel(driverId){
+  const stops = driverActiveStops(driverId);
+  if(stops.length<2) return '';
+  const naive = naiveRouteDistance(stops);
+  const {route, totalDist} = nearestNeighborRoute(stops);
+  const savedKm = Math.max(0, naive-totalDist);
+  return `
+  <div class="card p-3.5 mx-4 mb-3">
+    <div class="font-display font-semibold text-sm mb-1.5">เส้นทางแนะนำวันนี้ · ประหยัด ${savedKm.toFixed(1)} กม.</div>
+    <div class="flex flex-wrap gap-1.5">
+      ${route.map((s,idx)=>`<span class="chip" style="background:var(--accent-soft);color:var(--accent)">${idx+1}. ${s.name}</span>`).join('')}
+    </div>
+  </div>`;
+}
+function renderDriverJobs(){
+  const jobs = db.orders.filter(o=>o.driverId===state.driverIdView && (o.status==='pending'||o.status==='in_transit'));
+  return `
+  ${driverSelector()}
+  ${renderDriverRoutePanel(state.driverIdView)}
+  <div class="px-4 pb-6">
+    ${jobs.length===0?`<div class="text-center py-16 text-[var(--ink-soft)]">ยังไม่มีงานที่ต้องดำเนินการ</div>`:
+    jobs.map(o=>driverJobCard(o)).join('')}
+  </div>`;
+}
+function renderDriverHistory(){
+  const jobs = db.orders.filter(o=>o.driverId===state.driverIdView && (o.status==='delivered'||o.status==='failed'));
+  return `
+  ${driverSelector()}
+  <div class="px-4 pb-6">
+    ${jobs.length===0?`<div class="text-center py-16 text-[var(--ink-soft)]">ยังไม่มีประวัติงาน</div>`:
+    jobs.map(o=>driverJobCard(o)).join('')}
+  </div>`;
+}
+function driverJobCard(o){
+  const meta = STATUS_META[o.status];
+  const customer = findCustomer(o.customerId);
+  return `
+  <button onclick="openDriverJobDetail('${o.id}')" class="card w-full text-left p-3.5 mb-2.5 block">
+    <div class="flex items-center justify-between mb-1">
+      <span class="font-semibold text-sm">#${o.id}</span>
+      <span class="chip" style="background:${meta.soft};color:${meta.color}">${meta.label}</span>
+    </div>
+    <div class="text-[12.5px] text-[var(--ink-soft)]">${customer.name} · ${customer.address}</div>
+    <div class="text-[11.5px] text-[var(--ink-soft)] mt-0.5">น้ำหนัก ${o.totalWeight} กก. · ${o.distance} กม.</div>
+  </button>`;
+}
+function openDriverJobDetail(orderId){
+  const o = db.orders.find(x=>x.id===orderId);
+  const customer = findCustomer(o.customerId);
+  let actionBtns = '';
+  if(o.status==='pending') actionBtns = `<button onclick="driverSetStatus('${o.id}','in_transit')" class="w-full btn-primary rounded-2xl py-3 font-semibold">เริ่มเดินทางไปส่งสินค้า</button>`;
+  else if(o.status==='in_transit') actionBtns = `
+    <div class="grid grid-cols-2 gap-2.5">
+      <button onclick="driverSetStatus('${o.id}','delivered')" class="rounded-2xl py-3 font-semibold" style="background:var(--success);color:#fff">ส่งสำเร็จ</button>
+      <button onclick="driverSetStatus('${o.id}','failed')" class="rounded-2xl py-3 font-semibold" style="background:var(--danger-soft);color:var(--danger)">ส่งไม่สำเร็จ</button>
+    </div>`;
+  openModal(`
+    <h3 class="font-display font-semibold text-lg mb-0.5">งานจัดส่ง #${o.id}</h3>
+    <p class="text-sm text-[var(--ink-soft)] mb-4">${customer.name} · ${customer.phone}</p>
+    <div class="card p-3.5 space-y-1.5 mb-4">
+      <div class="text-sm"><span class="text-[var(--ink-soft)]">ที่อยู่:</span> ${customer.address}</div>
+      <div class="text-sm"><span class="text-[var(--ink-soft)]">ระยะทาง:</span> ${o.distance} กม.</div>
+      <div class="h-px bg-[var(--line)] my-1.5"></div>
+      ${o.items.map(i=>`<div class="flex justify-between text-sm"><span>${findProduct(i.productId).name} × ${i.qty}</span></div>`).join('')}
+      <div class="flex justify-between text-sm font-medium mt-1"><span>น้ำหนักรวม</span><span>${o.totalWeight} กก.</span></div>
+    </div>
+    ${actionBtns}
+  `);
+}
+function driverSetStatus(orderId, status){
+  setOrderStatus(orderId, status);
+}
+
+/* =========================================================
+   INIT
+========================================================= */
+render();
 </script>
 </body>
 </html>
