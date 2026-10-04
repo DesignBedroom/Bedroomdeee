@@ -2,1586 +2,2331 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>โรงไม้ | แพลตฟอร์มเฟอร์นิเจอร์ &amp; โลจิสติกส์</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Room Studio</title>
 <style>
-  :root{
-    --bg:#F4EEE3;
-    --paper:#FFFFFF;
-    --ink:#26221B;
-    --ink-soft:#6E6656;
-    --primary:#2E4A3A;
-    --primary-dark:#1D3126;
-    --accent:#C1701F;
-    --accent-soft:#F0DAB8;
-    --line:#E3DACA;
-    --success:#3D7A55;
-    --success-soft:#DEEEE1;
-    --warn:#B3862B;
-    --warn-soft:#F6E9C9;
-    --danger:#AB4432;
-    --danger-soft:#F5DFD8;
-    --info:#3C6B8C;
-    --info-soft:#DCE9F1;
-  }
-  *{-webkit-tap-highlight-color:transparent;}
-  html,body{background:#DCD4C2;}
-  body{font-family:'Sarabun',sans-serif;color:var(--ink);}
-  .font-display{font-family:'Prompt',sans-serif;}
-  #phone{
-    width:430px;max-width:100vw;height:100vh;max-height:932px;
-    background:var(--bg);position:relative;overflow:hidden;
-    margin:0 auto;box-shadow:0 30px 60px -20px rgba(0,0,0,.4);
-  }
-  @media(min-width:460px){
-    body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 0;}
-    #phone{border-radius:38px;border:10px solid #17140F;height:900px;}
-  }
-  #content{position:absolute;top:64px;bottom:78px;left:0;right:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-  #content.no-nav{bottom:0;}
-  #content.no-header{top:0;}
-  ::-webkit-scrollbar{width:0;height:0;}
-  .tab-btn{transition:color .15s ease, transform .1s ease;}
-  .tab-btn:active{transform:scale(.94);}
-  .card{background:var(--paper);border:1px solid var(--line);border-radius:16px;}
-  .chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;}
-  .btn-primary{background:var(--primary);color:#fff;}
-  .btn-primary:active{background:var(--primary-dark);}
-  .btn-accent{background:var(--accent);color:#fff;}
-  .stepper-line{position:absolute;left:11px;top:24px;bottom:-8px;width:2px;background:var(--line);}
-  .modal-backdrop{position:absolute;inset:0;background:rgba(23,20,15,.5);z-index:40;display:flex;align-items:flex-end;}
-  .modal-sheet{background:var(--bg);width:100%;max-height:88%;overflow-y:auto;border-radius:22px 22px 0 0;animation:slideUp .22s ease;}
-  @keyframes slideUp{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-  .toast{animation:toastIn .2s ease;}
-  @keyframes toastIn{from{transform:translateY(-14px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-  input,select,textarea{font-family:'Sarabun',sans-serif;}
-  input:focus,select:focus,textarea:focus{outline:2px solid var(--primary);outline-offset:1px;}
-  .scrollbar-x::-webkit-scrollbar{display:none;}
-  .bar-wrap{display:flex;align-items:flex-end;gap:8px;height:120px;}
-  .bar{flex:1;background:var(--primary);border-radius:6px 6px 0 0;position:relative;min-height:4px;}
-  .bar.today{background:var(--accent);}
-  #ar-overlay{z-index:45;}
+:root{--bg:#0f1116;--panel:#181b23;--panel2:#222632;--line:#2e3340;--text:#eef0f4;
+      --sub:#98a0b0;--accent:#5b8cff;--warn:#ffb454;--danger:#ff6161;
+      --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);
+  font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;}
+#gl{position:fixed;inset:0;width:100%;height:100%;touch-action:none;display:block;}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer;}
+.card{background:rgba(24,27,35,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  border:1px solid var(--line);border-radius:14px;}
+
+#bar{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;gap:8px;align-items:center;
+  padding:calc(8px + var(--sat)) 12px 8px;pointer-events:none;}
+#bar>*{pointer-events:auto;}
+#nameBox{flex:1;min-width:0;padding:9px 12px;font-weight:600;font-size:13.5px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;}
+.iconbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:17px;}
+.iconbtn.on{background:var(--accent);border-color:var(--accent);}
+#rail{position:fixed;right:12px;top:calc(58px + var(--sat));z-index:15;display:flex;flex-direction:column;gap:8px;}
+#seg{position:fixed;left:12px;top:calc(58px + var(--sat));z-index:15;display:flex;padding:3px;gap:2px;}
+#seg button{padding:6px 11px;border-radius:10px;font-size:12px;color:var(--sub);}
+#seg button.on{background:var(--accent);color:#fff;}
+
+#sel{position:fixed;left:0;right:0;z-index:18;display:none;justify-content:center;gap:6px;padding:0 10px;}
+#sel.on{display:flex;}
+#sel button{width:44px;height:44px;border-radius:13px;background:var(--panel2);
+  border:1px solid var(--line);display:grid;place-items:center;font-size:17px;}
+#sel button.on{background:var(--accent);border-color:var(--accent);}
+#sel button.dgr{color:var(--danger);border-color:#5a2b2b;}
+
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:19;height:96px;
+  background:var(--panel);border-top:1px solid var(--line);border-radius:20px 20px 0 0;
+  box-shadow:0 -8px 30px rgba(0,0,0,.45);transition:height .26s cubic-bezier(.22,.8,.3,1);
+  display:flex;flex-direction:column;padding-bottom:var(--sab);}
+#sheet.drag{transition:none;}
+#grab{height:22px;display:grid;place-items:center;flex:0 0 auto;touch-action:none;}
+#grab::after{content:"";width:38px;height:4px;border-radius:2px;background:#454b5c;}
+#tabs{display:flex;gap:6px;padding:0 12px 8px;overflow-x:auto;flex:0 0 auto;scrollbar-width:none;}
+#tabs::-webkit-scrollbar{display:none;}
+#tabs button{flex:0 0 auto;padding:7px 13px;border-radius:11px;font-size:12.5px;
+  background:var(--panel2);color:var(--sub);border:1px solid transparent;white-space:nowrap;}
+#tabs button.on{background:rgba(91,140,255,.16);color:var(--accent);border-color:var(--accent);}
+#body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:2px 12px 18px;-webkit-overflow-scrolling:touch;}
+.pane{display:none;} .pane.on{display:block;}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px;}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px 4px;
+  display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10.5px;color:var(--sub);}
+.chip b{font-size:22px;font-weight:400;line-height:1;}
+.chip:active{transform:scale(.95);}
+.chip.up{border-color:rgba(255,180,84,.45);color:var(--warn);}
+.row{display:flex;align-items:center;gap:10px;margin:11px 0;}
+.row label{flex:0 0 88px;font-size:12px;color:var(--sub);}
+.row output{flex:0 0 58px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;}
+input[type=range]{flex:1;accent-color:var(--accent);height:26px;min-width:0;}
+.sect{font-size:11px;color:var(--sub);letter-spacing:.5px;text-transform:uppercase;margin:14px 0 6px;}
+.swrap{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.swrap::-webkit-scrollbar{display:none;}
+.sw{flex:0 0 46px;height:46px;border-radius:12px;border:3px solid transparent;position:relative;padding:0;}
+.sw.on{border-color:var(--accent);}
+.sw span{position:absolute;bottom:-15px;left:-4px;right:-4px;text-align:center;font-size:9px;color:var(--sub);}
+.mcat{flex:0 0 auto;padding:7px 12px;border-radius:11px;background:var(--panel2);font-size:12px;color:var(--sub);}
+.mcat.on{background:rgba(91,140,255,.16);color:var(--accent);}
+.btn{width:100%;padding:12px;border-radius:13px;background:var(--panel2);border:1px solid var(--line);
+  font-size:13px;margin-top:8px;}
+.btn.dgr{color:var(--danger);border-color:#5a2b2b;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.empty{color:var(--sub);font-size:12.5px;text-align:center;padding:26px 10px;}
+
+#toast{position:fixed;left:50%;top:auto;transform:translateX(-50%) translateY(-14px);z-index:40;
+  padding:10px 16px;border-radius:12px;background:#2a2f3c;font-size:12.5px;opacity:0;
+  transition:.25s;pointer-events:none;white-space:nowrap;bottom:calc(120px + var(--sab));}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+#fps{position:fixed;left:12px;bottom:calc(104px + var(--sab));z-index:14;font-size:10px;
+  color:var(--sub);font-variant-numeric:tabular-nums;pointer-events:none;}
+#err{position:fixed;inset:0;z-index:99;background:#14161c;color:#ff8f8f;padding:28px 20px;
+  font:12px/1.6 ui-monospace,Menlo,monospace;overflow:auto;display:none;white-space:pre-wrap;}
+
+/* ══════════ SHOP LAYER (เพิ่มใหม่ ไม่กระทบของเดิม) ══════════ */
+#shop{position:fixed;inset:0;z-index:60;background:var(--bg);display:none;flex-direction:column;}
+#shop.on{display:flex;}
+#shBar{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:calc(9px + var(--sat)) 12px 9px;
+  background:var(--panel);border-bottom:1px solid var(--line);}
+#shBar .t{flex:1;min-width:0;font-weight:700;font-size:15px;letter-spacing:-.3px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;}
+#shBar .t i{color:var(--accent);font-style:normal;}
+.shIcon{width:38px;height:38px;border-radius:11px;background:var(--panel2);border:1px solid var(--line);
+  display:grid;place-items:center;font-size:16px;position:relative;flex:0 0 auto;}
+.shBadge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  background:var(--danger);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;}
+#shTabs{flex:0 0 auto;display:flex;gap:6px;padding:9px 12px;overflow-x:auto;scrollbar-width:none;
+  background:var(--panel);border-bottom:1px solid var(--line);}
+#shTabs::-webkit-scrollbar{display:none;}
+#shTabs button{flex:0 0 auto;padding:7px 13px;border-radius:11px;font-size:12.5px;white-space:nowrap;
+  background:var(--panel2);color:var(--sub);border:1px solid transparent;}
+#shTabs button.on{background:rgba(91,140,255,.16);color:var(--accent);border-color:var(--accent);}
+#shBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 12px calc(26px + var(--sab));}
+
+.shTools{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
+.shIn{padding:10px 12px;border-radius:11px;background:var(--panel2);border:1px solid var(--line);
+  color:var(--text);font-size:13px;outline:none;width:100%;}
+.shIn:focus{border-color:var(--accent);}
+.shTools .shIn{flex:1;min-width:130px;width:auto;}
+.shTools select.shIn{flex:0 0 auto;min-width:118px;}
+.shCats{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none;}
+.shCats::-webkit-scrollbar{display:none;}
+.shCats button{flex:0 0 auto;padding:7px 12px;border-radius:20px;font-size:12px;background:var(--panel2);
+  border:1px solid var(--line);color:var(--sub);white-space:nowrap;}
+.shCats button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+.shGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(152px,1fr));gap:11px;}
+.shCard{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  display:flex;flex-direction:column;text-align:left;padding:0;}
+.shCard:active{transform:scale(.985);}
+.shThumb{width:100%;aspect-ratio:1/1;background:linear-gradient(160deg,#262b36,#1b1f28);
+  display:block;object-fit:cover;}
+.shCard .bd{padding:9px 10px 11px;display:flex;flex-direction:column;gap:3px;}
+.shCard .nm{font-size:12px;line-height:1.35;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden;}
+.shCard .mt{font-size:10px;color:var(--sub);}
+.shCard .pr{font-size:14.5px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;}
+.shCard .op{font-size:10.5px;color:var(--sub);text-decoration:line-through;margin-left:5px;font-weight:400;}
+.shTag{position:absolute;top:8px;left:8px;padding:3px 8px;border-radius:8px;font-size:9.5px;font-weight:700;}
+.shTag.sale{background:var(--danger);color:#fff;}
+.shTag.new{background:var(--accent);color:#fff;}
+.shTag.hot{background:var(--warn);color:#2a1d05;}
+.shFav{position:absolute;top:6px;right:6px;width:30px;height:30px;border-radius:50%;
+  background:rgba(15,17,22,.65);display:grid;place-items:center;font-size:13px;}
+.shWrapRel{position:relative;}
+.shStars{font-size:10px;color:var(--warn);}
+.shOut{font-size:10px;color:var(--danger);font-weight:600;}
+
+.shSect{font-size:11px;color:var(--sub);letter-spacing:.5px;text-transform:uppercase;margin:16px 0 7px;}
+.shBox{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:13px;margin-bottom:11px;}
+.shBox h4{margin:0 0 9px;font-size:13px;font-weight:600;}
+.shKpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(144px,1fr));gap:10px;margin-bottom:13px;}
+.shKpi{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:12px 13px;}
+.shKpi .l{font-size:10.5px;color:var(--sub);margin-bottom:5px;}
+.shKpi .v{font-size:21px;font-weight:700;letter-spacing:-.6px;font-variant-numeric:tabular-nums;}
+.shKpi .d{font-size:10px;color:var(--sub);margin-top:3px;}
+.shKpi.acc .v{color:var(--accent);} .shKpi.ok .v{color:#33c98a;}
+.shKpi.wn .v{color:var(--warn);} .shKpi.dg .v{color:var(--danger);}
+
+.shLine{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:12.5px;}
+.shLine span:last-child{font-variant-numeric:tabular-nums;}
+.shLine.sub span{color:var(--sub);font-size:11.5px;}
+.shLine.tot{border-top:1px solid var(--line);margin-top:8px;padding-top:10px;font-weight:700;font-size:15.5px;}
+.shLine.tot span:last-child{color:var(--accent);}
+
+.shItem{display:flex;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:9px;margin-bottom:9px;align-items:center;}
+.shItem img{width:58px;height:58px;border-radius:10px;flex:0 0 auto;object-fit:cover;background:#22262f;}
+.shItem .i{flex:1;min-width:0;}
+.shItem .i b{font-size:12.5px;display:block;line-height:1.35;}
+.shItem .i small{color:var(--sub);font-size:10.5px;}
+.shQty{display:flex;align-items:center;gap:6px;margin-top:6px;}
+.shQty button{width:26px;height:26px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);
+  display:grid;place-items:center;font-size:14px;}
+.shQty b{min-width:26px;text-align:center;font-size:12.5px;font-variant-numeric:tabular-nums;}
+
+.shBtn{width:100%;padding:12px;border-radius:13px;background:var(--panel2);border:1px solid var(--line);
+  font-size:13px;font-weight:500;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.shBtn.pri{background:var(--accent);border-color:var(--accent);color:#fff;}
+.shBtn.ok{background:rgba(51,201,138,.15);border-color:#2a6f52;color:#33c98a;}
+.shBtn.dgr{background:rgba(255,97,97,.1);border-color:#5a2b2b;color:var(--danger);}
+.shBtn.sm{width:auto;padding:7px 12px;font-size:12px;border-radius:10px;margin:0;}
+.shRow2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+.shTbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel);}
+.shTbl table{width:100%;border-collapse:collapse;font-size:12px;min-width:430px;}
+.shTbl th{text-align:left;padding:9px 10px;background:var(--panel2);color:var(--sub);font-weight:500;
+  font-size:10.5px;white-space:nowrap;border-bottom:1px solid var(--line);}
+.shTbl td{padding:9px 10px;border-bottom:1px solid #22262f;}
+.shTbl tr:last-child td{border-bottom:none;}
+.shTbl .n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+
+.shPill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;}
+.s-pending{background:rgba(255,180,84,.16);color:var(--warn);}
+.s-paid{background:rgba(91,140,255,.18);color:var(--accent);}
+.s-packing{background:rgba(167,123,255,.18);color:#a77bff;}
+.s-shipping{background:rgba(84,184,255,.18);color:#54b8ff;}
+.s-done{background:rgba(51,201,138,.17);color:#33c98a;}
+.s-cancel{background:rgba(255,97,97,.15);color:var(--danger);}
+
+#shModal{position:fixed;inset:0;z-index:70;background:rgba(6,8,12,.75);display:none;
+  align-items:flex-end;justify-content:center;}
+#shModal.on{display:flex;}
+#shModalBox{width:100%;max-width:580px;max-height:93vh;overflow-y:auto;background:var(--panel);
+  border:1px solid var(--line);border-radius:20px 20px 0 0;padding:16px 14px calc(20px + var(--sab));}
+@media(min-width:680px){#shModal{align-items:center;}#shModalBox{border-radius:20px;max-height:90vh;}}
+.shMH{display:flex;align-items:center;gap:10px;margin-bottom:13px;}
+.shMH h3{margin:0;flex:1;font-size:16px;line-height:1.3;}
+.shGal{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;margin-bottom:11px;}
+.shGal::-webkit-scrollbar{display:none;}
+.shGal img{width:112px;height:112px;border-radius:13px;flex:0 0 auto;background:#22262f;object-fit:cover;
+  border:1px solid var(--line);}
+.shFld{margin-bottom:10px;}
+.shFld label{display:block;font-size:11px;color:var(--sub);margin-bottom:5px;}
+canvas.shChart{width:100%;display:block;}
+.shLeg{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:9px;}
+.shLeg span{font-size:10.5px;color:var(--sub);display:inline-flex;align-items:center;gap:5px;}
+.shLeg i{width:9px;height:9px;border-radius:2px;display:inline-block;}
 </style>
+
 </head>
 <body>
+<canvas id="gl"></canvas>
 
-<div id="phone">
-  <!-- Header -->
-  <div id="header" class="absolute top-0 left-0 right-0 h-16 bg-[var(--primary)] text-white flex items-center justify-between px-4 z-20"></div>
-
-  <!-- Main content -->
-  <div id="content"></div>
-
-  <!-- Bottom nav -->
-  <div id="bottomnav" class="absolute bottom-0 left-0 right-0 bg-[var(--paper)] border-t border-[var(--line)] z-20"></div>
-
-  <!-- AR full-screen overlay -->
-  <div id="ar-overlay" class="absolute inset-0 hidden"></div>
-
-  <!-- Modal root -->
-  <div id="modal-root"></div>
-
-  <!-- Toasts -->
-  <div id="toast-root" class="absolute top-4 left-0 right-0 z-50 flex flex-col items-center gap-2 px-4 pointer-events-none"></div>
+<div id="bar">
+  <button class="iconbtn card" id="bUndo" aria-label="ย้อนกลับ">↩</button>
+  <div class="card" id="nameBox">Room Studio</div>
+  <button class="iconbtn card" id="bShop" aria-label="ร้านค้า">🛍️</button>
+  <button class="iconbtn card" id="bSave" aria-label="บันทึก">💾</button>
 </div>
 
+<div id="seg" class="card">
+  <button data-view="3d" class="on">3D</button>
+  <button data-view="top">ผัง</button>
+  <button data-view="walk">เดิน</button>
+</div>
+
+<div id="rail">
+  <button class="iconbtn card" id="bCam" aria-label="รีเซ็ตกล้อง">↺</button>
+  <button class="iconbtn card on" id="bSnap" aria-label="สแนป">🧲</button>
+  <button class="iconbtn card" id="bWall" aria-label="ซ่อนผนัง">🧱</button>
+</div>
+
+<div id="sel">
+  <button id="tRotL" aria-label="หมุนซ้าย">⟲</button>
+  <button id="tRotR" aria-label="หมุนขวา">⟳</button>
+  <button id="tMove" aria-label="ย้าย">✋</button>
+  <button id="tDup"  aria-label="ทำซ้ำ">⧉</button>
+  <button id="tDel" class="dgr" aria-label="ลบ">🗑</button>
+</div>
+
+<section id="sheet">
+  <div id="grab" role="button" aria-label="ลากเพื่อขยายแผง"></div>
+  <nav id="tabs">
+    <button data-tab="cat" class="on">🪑 แคตตาล็อก</button>
+    <button data-tab="mat">🎨 วัสดุ</button>
+    <button data-tab="prop">⚙️ คุณสมบัติ</button>
+    <button data-tab="room">🏠 ห้อง &amp; แสง</button>
+  </nav>
+  <div id="body">
+    <div class="pane on" id="paneCat"><div class="grid" id="catGrid"></div></div>
+
+    <div class="pane" id="paneMat">
+      <div id="matEmpty" class="empty">แตะเฟอร์นิเจอร์ในห้องเพื่อเปลี่ยนวัสดุ</div>
+      <div id="matUI" hidden>
+        <div class="sect">หมวดวัสดุ</div>
+        <div class="swrap" id="matCats"></div>
+        <div class="sect">เฉดสี</div>
+        <div class="swrap" id="matSw" style="padding-bottom:22px"></div>
+        <div class="sect">ปรับละเอียด</div>
+        <div class="row"><label>ความหยาบ</label><input type="range" id="sRough" min="0" max="1" step="0.01" value="0.5"><output id="oRough">—</output></div>
+        <div class="row"><label>ความเป็นโลหะ</label><input type="range" id="sMetal" min="0" max="1" step="0.01" value="0"><output id="oMetal">—</output></div>
+      </div>
+    </div>
+
+    <div class="pane" id="paneProp">
+      <div id="propEmpty" class="empty">ยังไม่ได้เลือกวัตถุ</div>
+      <div id="propUI" hidden>
+        <div class="sect" id="propName">—</div>
+        <div class="row"><label>กว้าง (ซม.)</label><input type="range" id="sW" min="10" max="400" step="1" value="100"><output id="oW">—</output></div>
+        <div class="row"><label>สูง (ซม.)</label><input type="range" id="sH" min="5" max="300" step="1" value="100"><output id="oH">—</output></div>
+        <div class="row"><label>ลึก (ซม.)</label><input type="range" id="sD" min="10" max="400" step="1" value="100"><output id="oD">—</output></div>
+        <div class="row"><label>หมุน (°)</label><input type="range" id="sR" min="0" max="355" step="5" value="0"><output id="oR">—</output></div>
+        <button class="btn" id="bWallSnap">↘ จัดชิดผนังที่ใกล้ที่สุด</button>
+        <button class="btn dgr" id="bDel2">ลบวัตถุนี้</button>
+      </div>
+    </div>
+
+    <div class="pane" id="paneRoom">
+      <div class="sect">ขนาดห้อง</div>
+      <div class="row"><label>กว้าง (ม.)</label><input type="range" id="rW" min="2.5" max="12" step="0.1" value="5"><output id="orW">5.0</output></div>
+      <div class="row"><label>ลึก (ม.)</label><input type="range" id="rD" min="2.5" max="12" step="0.1" value="4"><output id="orD">4.0</output></div>
+      <div class="row"><label>สูง (ม.)</label><input type="range" id="rH" min="2.2" max="5" step="0.05" value="2.7"><output id="orH">2.70</output></div>
+      <div class="sect">พื้น</div><div class="swrap" id="floorSw" style="padding-bottom:22px"></div>
+      <div class="sect">ผนัง</div><div class="swrap" id="wallSw" style="padding-bottom:22px"></div>
+      <div class="sect">แสง</div>
+      <div class="row"><label>ช่วงเวลา</label><input type="range" id="lTime" min="6" max="19" step="0.5" value="14"><output id="olTime">14:00</output></div>
+      <div class="row"><label>ความสว่าง</label><input type="range" id="lInt" min="0" max="3" step="0.05" value="1.35"><output id="olInt">1.35</output></div>
+      <div class="sect">คุณภาพภาพ</div>
+      <div class="swrap" id="qBtns"></div>
+      <div class="two" style="margin-top:16px">
+        <button class="btn" id="bLoad">เปิดไฟล์ที่บันทึก</button>
+        <button class="btn dgr" id="bClear">ล้างห้อง</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="fps">—</div>
+<div id="toast"></div>
+<div id="err"></div>
+<input type="file" id="glbInput" accept=".glb" hidden>
+
+<!-- ══════════ SHOP OVERLAY ══════════ -->
+<section id="shop">
+  <div id="shBar">
+    <button class="shIcon" id="shClose" aria-label="ปิดร้านค้า">✕</button>
+    <div class="t">Room<i>Shop</i> · ร้านเฟอร์นิเจอร์</div>
+    <button class="shIcon" id="shFavBtn" aria-label="รายการโปรด">❤️<span class="shBadge" id="shFavBadge" hidden>0</span></button>
+    <button class="shIcon" id="shCartBtn" aria-label="ตะกร้า">🛒<span class="shBadge" id="shCartBadge" hidden>0</span></button>
+  </div>
+  <nav id="shTabs">
+    <button data-t="store" class="on">🏪 ร้านค้า</button>
+    <button data-t="cart">🛒 ตะกร้า</button>
+    <button data-t="orders">📦 คำสั่งซื้อ</button>
+    <button data-t="fav">❤️ รายการโปรด</button>
+    <button data-t="room">🏠 ห้องของฉัน</button>
+    <button data-t="dash">📊 แดชบอร์ด</button>
+    <button data-t="admin">⚙️ จัดการสินค้า</button>
+  </nav>
+  <div id="shBody"></div>
+</section>
+<div id="shModal"><div id="shModalBox"></div></div>
+
 <script>
-/* =========================================================
-   DATA MODEL
-========================================================= */
-const CO2_FACTOR_KG_PER_KM = 0.21; // ค่าเฉลี่ยการปล่อย CO2 ของรถขนส่งเฟอร์นิเจอร์ (กก./กม.)
-const DEPOT = {x:0, y:0, name:'คลังสินค้าโรงไม้'};
-
-const db = {
-  products: [
-    {id:'P1', name:'โซฟา 3 ที่นั่ง วอลนัท', category:'โซฟา', price:8990, weight:45, stock:10, color:0x6B4F3B, dims:[2.0,0.8,0.9], recycledPct:35, material:'โครงไม้ยางพารารีไซเคิล + ผ้าฝ้ายรีไซเคิล'},
-    {id:'P2', name:'โต๊ะทานอาหาร 6 ที่นั่ง', category:'โต๊ะ', price:12990, weight:38, stock:6, color:0x8B5E34, dims:[1.6,0.75,0.9], recycledPct:20, material:'ไม้เอ็นจิเนียร์รีไซเคิล'},
-    {id:'P3', name:'เตียงนอน 6 ฟุต', category:'เตียง', price:15990, weight:60, stock:4, color:0x5A4632, dims:[2.1,0.4,1.9], recycledPct:40, material:'ไม้ MDF รีไซเคิล'},
-    {id:'P4', name:'ชั้นวางหนังสือ 5 ชั้น', category:'ชั้นวาง', price:4990, weight:25, stock:2, color:0x7A5C3E, dims:[0.8,1.8,0.3], recycledPct:55, material:'ไม้อัดรีไซเคิล'},
-    {id:'P5', name:'เก้าอี้สำนักงานเออร์โกโนมิก', category:'เก้าอี้', price:3490, weight:12, stock:15, color:0x33312D, dims:[0.6,1.1,0.6], recycledPct:30, material:'พลาสติก rPET รีไซเคิล'},
-    {id:'P6', name:'ตู้เสื้อผ้าบานเลื่อน', category:'ตู้', price:9990, weight:55, stock:5, color:0x4E3B2A, dims:[1.2,2.0,0.6], recycledPct:25, material:'ไม้ปาร์ติเคิลบอร์ดรีไซเคิล'},
-    {id:'P7', name:'โต๊ะกลางหน้าหินอ่อน', category:'โต๊ะ', price:2990, weight:15, stock:8, color:0x9C7A4E, dims:[1.0,0.4,0.5], recycledPct:15, material:'เศษหินอ่อนผสมเรซิน'},
-    {id:'P8', name:'ชั้นวางทีวีลอยตัว', category:'ชั้นวาง', price:5990, weight:22, stock:7, color:0x6E5237, dims:[1.5,0.5,0.4], recycledPct:45, material:'ไม้อัดรีไซเคิล'},
-  ],
-  customers: [
-    {id:'C1', name:'สมชาย ใจดี', address:'สุขุมวิท 71, กรุงเทพฯ', distance:8, phone:'081-234-5678', coord:{x:5,y:6}},
-    {id:'C2', name:'วรรณา สวยงาม', address:'งามวงศ์วาน, นนทบุรี', distance:18, phone:'082-345-6789', coord:{x:-10,y:15}},
-    {id:'C3', name:'ธนา รุ่งเรือง', address:'รังสิต, ปทุมธานี', distance:25, phone:'083-456-7890', coord:{x:14,y:20}},
-  ],
-  vehicles: [
-    {id:'V1', name:'กระบะตู้ทึบ ทะเบียน 1กข-1234', capacity:800},
-    {id:'V2', name:'รถ 4 ล้อ ทะเบียน 2ขค-5678', capacity:1500},
-    {id:'V3', name:'กระบะ ทะเบียน 3คง-9012', capacity:600},
-  ],
-  drivers: [
-    {id:'D1', name:'สมพงษ์ แข็งขัน', vehicleId:'V1', status:'available'},
-    {id:'D2', name:'อนุชา ไวไฟ', vehicleId:'V2', status:'busy'},
-    {id:'D3', name:'วิชัย มั่นคง', vehicleId:'V3', status:'available'},
-  ],
-  orders: [],
-  notifications: [],
-};
-// ค้นหาตำแหน่งที่ประกาศตัวแปร products (ประมาณช่วง script ด้านล่าง)
-const products = [
-  {
-    id: 'p1',
-    name: 'โซฟา SF380 Dim L100xW80-160xH110 cm',
-    price: 22900,
-    weight: 25,
-    stock: 10,
-    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500', // ใส่ URL รูปภาพสินค้า
-    discount: null,
-    rating: 0
-  },
-  {
-    id: 'p2',
-    name: 'พรมรุ่น Fishbone Series',
-    price: '3,050 - 12,000',
-    weight: 5,
-    stock: 15,
-    image: 'https://images.unsplash.com/photo-1600121848594-d8644e57abab?w=500',
-    discount: '-20%',
-    rating: 0
-  },
-  {
-    id: 'p3',
-    name: 'พรมรุ่น MS-01R Series',
-    price: '7,190 - 11,600',
-    weight: 8,
-    stock: 8,
-    image: 'https://images.unsplash.com/photo-1579656381226-5fc0f0100c3b?w=500',
-    discount: '-20%',
-    rating: 0
-  },
-  {
-    id: 'p4',
-    name: 'พรมรุ่น HS/NX Series HS-01',
-    price: '13,770 - 32,100',
-    weight: 12,
-    stock: 5,
-    image: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=500',
-    discount: '-15%',
-    rating: 0
-  }
-];
-const RATE_PER_KG = 8;
-const RATE_PER_KM = 15;
-const BASE_FEE = 50;
-const FUEL_PER_KM = 6;
-const DRIVER_WAGE = 150;
-
-function calcShipping(weight, distance){ return Math.round(BASE_FEE + weight*RATE_PER_KG + distance*RATE_PER_KM); }
-function calcTripCost(distance){ return Math.round(distance*FUEL_PER_KM + DRIVER_WAGE); }
-function fmt(n){ return Number(n).toLocaleString('th-TH'); }
-function findProduct(id){ return db.products.find(p=>p.id===id); }
-function findCustomer(id){ return db.customers.find(c=>c.id===id); }
-function findDriver(id){ return db.drivers.find(d=>d.id===id); }
-function findVehicle(id){ return db.vehicles.find(v=>v.id===id); }
-
-function addNotification(text, channels){
-  db.notifications.unshift({id:'N'+Date.now()+Math.random().toString(16).slice(2,5), text, channels, time:nowLabel()});
-  if(db.notifications.length>30) db.notifications.pop();
-}
-function nowLabel(){
-  const d=new Date();
-  return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
-}
-
-function buildOrder(customerId, items){
-  const customer = findCustomer(customerId);
-  const distance = customer.distance;
-  const totalWeight = items.reduce((s,i)=>s+findProduct(i.productId).weight*i.qty,0);
-  const productTotal = items.reduce((s,i)=>s+findProduct(i.productId).price*i.qty,0);
-  const shippingCost = calcShipping(totalWeight, distance);
-  const co2 = Math.round(distance*CO2_FACTOR_KG_PER_KM*10)/10;
-  const id = 'O'+(1000+db.orders.length+1);
-  const order = {
-    id, customerId, items, totalWeight, distance,
-    shippingCost, productTotal, grandTotal: productTotal+shippingCost,
-    co2, status:'new', driverId:null,
-    timeline:[{status:'new', time:nowLabel()}]
-  };
-  db.orders.unshift(order);
-  addNotification(`ออเดอร์ #${id} ถูกสร้างขึ้นใหม่ (ลูกค้า: ${customer.name})`, ['inapp']);
-  return order;
-}
-
-function seedOrders(){
-  const o1 = buildOrder('C1', [{productId:'P1',qty:1},{productId:'P7',qty:1}]);
-  o1.status='delivered'; o1.driverId='D2';
-  o1.timeline=[{status:'new',time:'08:10'},{status:'pending',time:'08:40'},{status:'in_transit',time:'09:15'},{status:'delivered',time:'11:02'}];
-
-  const o2 = buildOrder('C2', [{productId:'P2',qty:1},{productId:'P5',qty:4}]);
-  o2.status='in_transit'; o2.driverId='D2';
-  o2.timeline=[{status:'new',time:'09:00'},{status:'pending',time:'09:20'},{status:'in_transit',time:'10:05'}];
-
-  const o3 = buildOrder('C3', [{productId:'P3',qty:1}]);
-  o3.status='pending'; o3.driverId='D1';
-  o3.timeline=[{status:'new',time:'10:30'},{status:'pending',time:'10:50'}];
-
-  const o5 = buildOrder('C2', [{productId:'P8',qty:1}]);
-  o5.status='failed'; o5.driverId='D3';
-  o5.timeline=[{status:'new',time:'07:00'},{status:'pending',time:'07:30'},{status:'in_transit',time:'08:10'},{status:'failed',time:'09:40'}];
-
-  const o4 = buildOrder('C1', [{productId:'P4',qty:1}]); // status new, unassigned
-
-  const o6 = buildOrder('C2', [{productId:'P6',qty:1}]);
-  o6.status='pending'; o6.driverId='D1';
-  o6.timeline=[{status:'new',time:'09:40'},{status:'pending',time:'10:00'}];
-
-  db.notifications = [];
-  addNotification('สต็อกต่ำ: ชั้นวางหนังสือ 5 ชั้น เหลือ 2 ชิ้น', ['line','email']);
-  addNotification('ออเดอร์ #O1001 จัดส่งสำเร็จ', ['line']);
-  addNotification('ออเดอร์ #O1002 เปลี่ยนสถานะเป็น กำลังจัดส่ง', ['email']);
-}
-seedOrders();
-
-const STATUS_META = {
-  new:      {label:'งานใหม่',      color:'var(--info)',    soft:'var(--info-soft)'},
-  pending:  {label:'รอรับสินค้า',  color:'var(--warn)',    soft:'var(--warn-soft)'},
-  in_transit:{label:'กำลังจัดส่ง', color:'var(--accent)',  soft:'var(--accent-soft)'},
-  delivered:{label:'ส่งสำเร็จ',    color:'var(--success)', soft:'var(--success-soft)'},
-  failed:   {label:'ส่งไม่สำเร็จ', color:'var(--danger)',  soft:'var(--danger-soft)'},
-};
-
-/* AI Interior Stylist — rule-based style presets (offline keyword matching) */
-const STYLE_PRESETS = [
-  {key:'minimal', keywords:['มินิมอล','minimal','เรียบ','โมเดิร์น'], name:'มินิมอลโทนอบอุ่น', desc:'เรียบง่าย เส้นสายสะอาด เน้นฟังก์ชันการใช้งาน', productIds:['P1','P7','P8','P5']},
-  {key:'scandi', keywords:['สแกนดิเนเวียน','scandi','ไม้อ่อน','นอร์ดิก'], name:'สแกนดิเนเวียนไม้อ่อน', desc:'โทนไม้อ่อน อบอุ่น เน้นความโปร่งสบายตา', productIds:['P1','P8','P4','P7']},
-  {key:'industrial', keywords:['อุตสาหกรรม','industrial','ลอฟท์','loft'], name:'อินดัสเทรียลลอฟท์', desc:'โครงเหล็ก ไม้ดิบ กลิ่นอายโรงงาน', productIds:['P2','P5','P6','P4']},
-  {key:'japandi', keywords:['ญี่ปุ่น','วะบิ','japandi','เซน'], name:'จาปันดิ (Japandi)', desc:'เรียบนิ่ง อบอุ่น ผสมผสานญี่ปุ่นกับสแกนดิเนเวียน', productIds:['P3','P4','P7','P5']},
-  {key:'luxury', keywords:['หรู','ลักซ์ชัวรี','luxury','พรีเมียม'], name:'ลักซ์ชัวรีร่วมสมัย', desc:'วัสดุพรีเมียม โทนเข้มหรูหรา', productIds:['P2','P1','P6','P8']},
-];
-function matchStylePreset(text){
-  const t = (text||'').toLowerCase();
-  let best = null, bestScore = 0;
-  STYLE_PRESETS.forEach(p=>{
-    let score = 0;
-    p.keywords.forEach(k=>{ if(t.includes(k.toLowerCase())) score++; });
-    if(score>bestScore){ bestScore=score; best=p; }
+/* error overlay — ต้องอยู่ก่อน module เพื่อจับ SyntaxError ของ module ได้ */
+(function(){
+  var box=document.getElementById('err');
+  function show(msg){ box.style.display='block'; box.textContent+=msg+'\n\n'; }
+  window.addEventListener('error',function(e){
+    show('⚠ ERROR\n'+(e.message||e.type)+'\n'+(e.filename||'')+':'+(e.lineno||''));
   });
-  return best || STYLE_PRESETS[0];
+  window.addEventListener('unhandledrejection',function(e){
+    show('⚠ PROMISE\n'+(e.reason&&e.reason.message?e.reason.message:e.reason));
+  });
+  setTimeout(function(){
+    if(!window.__ROOM_OK__) show('⚠ โมดูลไม่เริ่มทำงานใน 8 วินาที\nตรวจสอบการเชื่อมต่ออินเทอร์เน็ต (โหลด three.js จาก CDN)');
+  },8000);
+})();
+</script>
+
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
+}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ══════════ 0. utils ══════════ */
+const qs = s => document.querySelector(s);
+const toastEl = qs('#toast');
+let toastTimer = 0;
+function showToast(msg){
+  toastEl.textContent = msg; toastEl.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toastEl.classList.remove('on'), 1900);
+}
+const isCoarse = matchMedia('(pointer:coarse)').matches;
+const clamp = THREE.MathUtils.clamp;
+
+/* ══════════ 1. quality tiers ══════════ */
+const QUALITY = {
+  low : {dpr:1,   shadow:512,  shadows:false, label:'ประหยัด'},
+  med : {dpr:1.5, shadow:1024, shadows:true,  label:'สมดุล'},
+  high: {dpr:2,   shadow:2048, shadows:true,  label:'สวยสุด'}
+};
+let qualityKey = isCoarse ? 'med' : 'high';
+
+/* ══════════ 2. renderer ══════════ */
+const canvasEl = qs('#gl');
+const renderer = new THREE.WebGLRenderer({canvas:canvasEl, antialias:true, powerPreference:'high-performance'});
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+const maxAniso = renderer.capabilities.getMaxAnisotropy();
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f1116);
+{
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.02).texture;
+  pmrem.dispose();
 }
 
-/* Smart Route Optimization — nearest-neighbor heuristic */
-function nearestNeighborRoute(stops){
-  const remaining = stops.slice();
-  const route = [];
-  let current = DEPOT;
-  let totalDist = 0;
-  while(remaining.length){
-    let bestIdx = 0, bestDist = Infinity;
-    remaining.forEach((s,idx)=>{
-      const d = Math.hypot(s.x-current.x, s.y-current.y);
-      if(d<bestDist){ bestDist=d; bestIdx=idx; }
+const camera = new THREE.PerspectiveCamera(52, 1, 0.05, 200);
+const orbitTarget = new THREE.Vector3(0, 1, 0);
+const orbit = {r:8, theta:Math.PI*0.75, phi:1.05};
+
+let needsRender = true;
+const invalidate = () => { needsRender = true; };
+
+canvasEl.addEventListener('webglcontextlost', e=>{ e.preventDefault(); showToast('กราฟิกหลุด กำลังกู้คืน…'); });
+canvasEl.addEventListener('webglcontextrestored', ()=>{ invalidate(); showToast('กู้คืนแล้ว'); });
+
+function viewSize(){
+  const vv = window.visualViewport;
+  return { w: Math.round(vv ? vv.width : innerWidth), h: Math.round(vv ? vv.height : innerHeight) };
+}
+function onResize(){
+  const {w,h} = viewSize();
+  renderer.setPixelRatio(Math.min(devicePixelRatio, QUALITY[qualityKey].dpr));
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+  layoutSelBar();
+  invalidate();
+}
+addEventListener('resize', onResize);
+if(window.visualViewport) visualViewport.addEventListener('resize', onResize);
+
+/* ══════════ 3. procedural textures ══════════ */
+const canvasCache = new Map();
+function makeCanvas(kind, tint){
+  const key = kind + '|' + tint;
+  if(canvasCache.has(key)) return canvasCache.get(key);
+  const S = 256, cv = document.createElement('canvas');
+  cv.width = cv.height = S;
+  const x = cv.getContext('2d');
+  x.fillStyle = tint; x.fillRect(0,0,S,S);
+
+  if(kind === 'wood'){
+    for(let i=0;i<80;i++){
+      x.strokeStyle = 'rgba(0,0,0,'+(0.03+Math.random()*0.07).toFixed(3)+')';
+      x.lineWidth = 0.5 + Math.random()*2;
+      x.beginPath();
+      let y = Math.random()*S; x.moveTo(0,y);
+      for(let p=0;p<=S;p+=18) x.lineTo(p, y + (Math.random()-0.5)*7);
+      x.stroke();
+    }
+  } else if(kind === 'fabric'){
+    x.globalAlpha = 0.12;
+    for(let p=0;p<S;p+=4){
+      x.fillStyle = (p/4)%2 ? '#000' : '#fff';
+      x.fillRect(p,0,2,S); x.fillRect(0,p,S,2);
+    }
+    x.globalAlpha = 1;
+  } else if(kind === 'marble'){
+    for(let i=0;i<16;i++){
+      x.strokeStyle = 'rgba(0,0,0,'+(0.04+Math.random()*0.09).toFixed(3)+')';
+      x.lineWidth = 0.6 + Math.random()*2.4;
+      x.beginPath();
+      let px = Math.random()*S, py = 0; x.moveTo(px,py);
+      for(let t=0;t<10;t++){ px += (Math.random()-0.5)*46; py += S/10; x.lineTo(px,py); }
+      x.stroke();
+    }
+  } else if(kind === 'metal'){
+    for(let y=0;y<S;y+=2){
+      x.fillStyle = 'rgba(255,255,255,'+(Math.random()*0.05).toFixed(3)+')';
+      x.fillRect(0,y,S,1);
+    }
+  } else { /* stone / plaster */
+    const id = x.getImageData(0,0,S,S);
+    for(let i=0;i<id.data.length;i+=4){
+      const n = (Math.random()-0.5)*20;
+      id.data[i]+=n; id.data[i+1]+=n; id.data[i+2]+=n;
+    }
+    x.putImageData(id,0,0);
+  }
+  canvasCache.set(key, cv);
+  return cv;
+}
+/* FIX: คืน CanvasTexture ตัวใหม่เสมอ → ตั้ง repeat ได้อิสระ ไม่มิวเทตของที่แชร์ */
+function makeTexture(kind, tint, repeat, srgb){
+  const t = new THREE.CanvasTexture(makeCanvas(kind, tint));
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(repeat, repeat);
+  t.anisotropy = maxAniso;
+  t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;  // FIX: roughnessMap ต้อง non-color
+  return t;
+}
+
+/* ══════════ 4. material library + cache ══════════ */
+const MATS = {
+  wood  : {oak:0xa9744f, walnut:0x5b4636, pine:0xd9c9a8, ebony:0x3a2f29},
+  marble: {white:0xf2f2f0, black:0x181818, rose:0xd4a5a0, sage:0xa8b5a5},
+  stone : {gray:0x8b8b8b, slate:0x5a5a5a, sand:0xc2b280, concrete:0x6b6b6b},
+  metal : {steel:0xd0d0d0, gold:0xd4af37, copper:0xb87333, black:0x3a3a3a},
+  fabric: {ivory:0xefe9df, charcoal:0x2f3238, denim:0x3a6ea5, olive:0x7d8471},
+  glass : {clear:0xcfeaf5, tinted:0x8ecbe6, frosted:0xdddddd}
+};
+const MAT_TH = {wood:'ไม้', marble:'หินอ่อน', stone:'หิน', metal:'โลหะ', fabric:'ผ้า', glass:'กระจก'};
+const MAT_PRESET = {
+  wood:{r:0.62,m:0}, marble:{r:0.16,m:0}, stone:{r:0.85,m:0},
+  metal:{r:0.22,m:1}, fabric:{r:0.93,m:0}, glass:{r:0.08,m:0}
+};
+const TEX_KIND = {wood:'wood', marble:'marble', stone:'stone', metal:'metal', fabric:'fabric'};
+
+const matCache = new Map();
+/* FIX B1: tier = สเกล texture ตามขนาดจริงของชิ้นงาน (แบ่งเป็นขั้น เพื่อไม่ให้ material บาน) */
+function tierOf(w,h,d){ return clamp(Math.round(Math.max(w,h,d)*1.6), 1, 6); }
+
+function getMat(type, variant, tier){
+  if(!MATS[type]) type = 'wood';
+  if(MATS[type][variant] === undefined) variant = Object.keys(MATS[type])[0];  // FIX: กัน undefined
+  tier = tier || 1;
+  const key = type + '/' + variant + '/' + tier;
+  if(matCache.has(key)) return matCache.get(key);
+
+  const hex = MATS[type][variant], p = MAT_PRESET[type];
+  const base = {color:hex, roughness:p.r, metalness:p.m,
+                envMapIntensity: type==='metal' ? 1.4 : 0.85};
+  let mat;
+  if(type === 'glass'){
+    mat = new THREE.MeshPhysicalMaterial(Object.assign({}, base, {
+      transmission:0.92, thickness:0.02, ior:1.45, transparent:true, opacity:1
+    }));
+  } else if(type === 'marble' && qualityKey === 'high'){
+    mat = new THREE.MeshPhysicalMaterial(Object.assign({}, base, {clearcoat:0.45, clearcoatRoughness:0.12}));
+  } else {
+    mat = new THREE.MeshStandardMaterial(base);   // FIX D2: Standard เบากว่า Physical มาก
+  }
+  const kind = TEX_KIND[type];
+  if(kind){
+    const tint = '#' + hex.toString(16).padStart(6,'0');
+    mat.map = makeTexture(kind, tint, tier, true);
+    mat.roughnessMap = makeTexture(kind, '#888888', tier, false);
+  }
+  mat.userData = {type, variant, tier, cached:true};
+  matCache.set(key, mat);
+  return mat;
+}
+
+/* ══════════ 5. dispose helpers (FIX A6) ══════════ */
+function disposeObject(root){
+  root.traverse(n=>{
+    if(n.geometry) n.geometry.dispose();
+    if(!n.material) return;
+    if(!n.userData || !n.userData.owned) return;          // ไม่แตะ material ที่แชร์จาก cache
+    const list = Array.isArray(n.material) ? n.material : [n.material];
+    list.forEach(m=>{
+      if(!m) return;
+      if(n.userData.ownTextures){
+        m.map && m.map.dispose();
+        m.roughnessMap && m.roughnessMap.dispose();
+        m.normalMap && m.normalMap.dispose();
+        m.metalnessMap && m.metalnessMap.dispose();
+      }
+      m.dispose();
     });
-    const next = remaining.splice(bestIdx,1)[0];
-    totalDist += bestDist;
-    route.push(next);
-    current = next;
-  }
-  totalDist += Math.hypot(current.x-DEPOT.x, current.y-DEPOT.y);
-  return {route, totalDist};
-}
-function naiveRouteDistance(stops){
-  let current = DEPOT, total = 0;
-  stops.forEach(s=>{ total += Math.hypot(s.x-current.x, s.y-current.y); current = s; });
-  total += Math.hypot(current.x-DEPOT.x, current.y-DEPOT.y);
-  return total;
-}
-function driverActiveStops(driverId){
-  const activeOrders = db.orders.filter(o=>o.driverId===driverId && (o.status==='pending'||o.status==='in_transit'));
-  const map = {};
-  activeOrders.forEach(o=>{
-    const c = findCustomer(o.customerId);
-    const cx = c.coord ? c.coord.x : 0, cy = c.coord ? c.coord.y : 0;
-    if(!map[c.id]) map[c.id] = {id:c.id, name:c.name, x:cx, y:cy, orders:[]};
-    map[c.id].orders.push(o.id);
   });
-  return Object.values(map);
 }
-function computeFleetCO2Savings(){
-  let totalSavedKm = 0;
-  db.drivers.forEach(d=>{
-    const stops = driverActiveStops(d.id);
-    if(stops.length>=2){
-      const naive = naiveRouteDistance(stops);
-      const {totalDist} = nearestNeighborRoute(stops);
-      totalSavedKm += Math.max(0, naive-totalDist);
+
+/* ══════════ 6. lights ══════════ */
+scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+const sunLight = new THREE.DirectionalLight(0xfff2dd, 1.35);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(QUALITY[qualityKey].shadow, QUALITY[qualityKey].shadow);
+sunLight.shadow.bias = -0.0004;
+sunLight.shadow.normalBias = 0.02;
+sunLight.shadow.radius = 3;
+scene.add(sunLight);
+scene.add(sunLight.target);                 // FIX: ต้อง add target เข้า scene
+const fillLight = new THREE.DirectionalLight(0xbcd4ff, 0.26);
+fillLight.position.set(-4,5,-3);
+scene.add(fillLight);
+
+function setSunTime(hour){
+  const t = (hour - 6) / 13, a = Math.PI * t;
+  sunLight.position.set(Math.cos(a)*9, Math.max(1.8, Math.sin(a)*11), 4);
+  const noon = 1 - Math.abs(0.5 - t) * 1.6;
+  sunLight.color.setHSL(0.085, clamp(0.55 - noon*0.4, 0.05, 0.6), 0.62);
+  invalidate();
+}
+
+/* ══════════ 7. room ══════════ */
+let roomW = 5, roomD = 4, roomH = 2.7;
+let floorVariant = 'oak', wallVariant = 'concrete';
+let hideWalls = false;
+const roomGroup = new THREE.Group();
+scene.add(roomGroup);
+const wallPanels = [];
+
+function buildRoom(){
+  disposeObject(roomGroup);
+  roomGroup.clear();
+  wallPanels.length = 0;
+
+  /* floor */
+  const fHex = MATS.wood[floorVariant] !== undefined ? MATS.wood[floorVariant] : MATS.wood.oak;
+  const fTint = '#' + fHex.toString(16).padStart(6,'0');
+  const fMat = new THREE.MeshStandardMaterial({color:fHex, roughness:0.55, metalness:0});
+  fMat.map = makeTexture('wood', fTint, Math.max(2, Math.round(Math.max(roomW,roomD)*1.1)), true);
+  fMat.roughnessMap = makeTexture('wood', '#888888', Math.max(2, Math.round(Math.max(roomW,roomD)*1.1)), false);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(roomW, roomD), fMat);
+  floor.rotation.x = -Math.PI/2;
+  floor.receiveShadow = true;
+  floor.userData = {owned:true, ownTextures:true, isRoom:true};
+  roomGroup.add(floor);
+
+  /* grid */
+  const grid = new THREE.GridHelper(Math.max(roomW,roomD), Math.round(Math.max(roomW,roomD)*2), 0x3a4050, 0x272c38);
+  grid.position.y = 0.003;
+  grid.material.transparent = true;
+  grid.material.opacity = 0.3;
+  grid.userData = {owned:true, ownTextures:false};
+  roomGroup.add(grid);
+
+  /* walls */
+  const wHex = MATS.stone[wallVariant] !== undefined ? MATS.stone[wallVariant] : MATS.stone.concrete;
+  const wTint = '#' + wHex.toString(16).padStart(6,'0');
+  const wMat = new THREE.MeshStandardMaterial({color:wHex, roughness:0.92, metalness:0});
+  wMat.map = makeTexture('plaster', wTint, 3, true);
+
+  function panel(w,h,x,y,z,ry,own){
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,0.1), wMat);
+    m.position.set(x,y,z); m.rotation.y = ry;
+    m.castShadow = true; m.receiveShadow = true;
+    m.userData = {owned:true, ownTextures:!!own, isRoom:true};
+    return m;
+  }
+  function side(nx,nz,meshes){
+    const g = new THREE.Group();
+    meshes.forEach(m=>g.add(m));
+    g.userData = {normal:new THREE.Vector3(nx,0,nz)};
+    roomGroup.add(g);
+    wallPanels.push(g);
+  }
+  const doorW = Math.min(1.2, roomW*0.3);
+  side(0,-1, [panel(roomW, roomH, 0, roomH/2, -roomD/2, 0, true)]);
+  side(0, 1, [
+    panel((roomW-doorW)/2, roomH, -(doorW+ (roomW-doorW)/2)/2, roomH/2, roomD/2, 0, false),
+    panel((roomW-doorW)/2, roomH,  (doorW+ (roomW-doorW)/2)/2, roomH/2, roomD/2, 0, false),
+    panel(doorW, Math.max(0.05, roomH-2.05), 0, roomH - Math.max(0.05, roomH-2.05)/2, roomD/2, 0, false)
+  ]);
+  side(-1,0, [panel(roomD, roomH, -roomW/2, roomH/2, 0, Math.PI/2, false)]);
+  side( 1,0, [panel(roomD, roomH,  roomW/2, roomH/2, 0, Math.PI/2, false)]);
+
+  /* shadow frustum ตามขนาดห้อง */
+  const ext = Math.max(roomW, roomD);
+  sunLight.shadow.camera.left = -ext; sunLight.shadow.camera.right = ext;
+  sunLight.shadow.camera.top = ext;   sunLight.shadow.camera.bottom = -ext;
+  sunLight.shadow.camera.near = 0.5;  sunLight.shadow.camera.far = 40;
+  sunLight.shadow.camera.updateProjectionMatrix();
+
+  qs('#nameBox').textContent = 'ห้อง ' + roomW.toFixed(1) + ' × ' + roomD.toFixed(1) + ' × ' + roomH.toFixed(2) + ' ม.';
+  invalidate();
+}
+
+/* FIX C10: ซ่อนผนังที่บังกล้อง */
+const camVec = new THREE.Vector3();
+function updateWallVisibility(){
+  camVec.copy(camera.position).sub(orbitTarget);
+  for(const g of wallPanels){
+    g.visible = hideWalls ? false : (camVec.dot(g.userData.normal) < 0.2);
+  }
+}
+
+/* ══════════ 8. furniture catalog ══════════ */
+function mkBox(w,h,d,type,variant,x,y,z){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), getMat(type,variant,tierOf(w,h,d)));
+  m.position.set(x,y,z);
+  m.castShadow = true; m.receiveShadow = true;
+  m.userData = {t:type, v:variant, tier:tierOf(w,h,d), owned:false};
+  return m;
+}
+function mkCyl(rt,rb,h,type,variant,x,y,z){
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,18), getMat(type,variant,tierOf(rt*2,h,rb*2)));
+  m.position.set(x,y,z);
+  m.castShadow = true; m.receiveShadow = true;
+  m.userData = {t:type, v:variant, tier:tierOf(rt*2,h,rb*2), owned:false};
+  return m;
+}
+function mkCone(r,h,type,variant,x,y,z){
+  const m = new THREE.Mesh(new THREE.ConeGeometry(r,h,14), getMat(type,variant,tierOf(r*2,h,r*2)));
+  m.position.set(x,y,z);
+  m.castShadow = true; m.receiveShadow = true;
+  m.userData = {t:type, v:variant, tier:tierOf(r*2,h,r*2), owned:false};
+  return m;
+}
+function mkGroup(){
+  const g = new THREE.Group();
+  for(const p of arguments) g.add(p);
+  return g;
+}
+function mkLegs(type,variant,pts,y,thick,h){
+  return pts.map(p => mkBox(thick,h,thick,type,variant,p[0],y,p[1]));
+}
+
+const CATALOG = {
+  bed:      {icon:'🛏️', label:'เตียง', build:()=>mkGroup(
+              mkBox(1.5,0.32,2.0,'wood','pine',0,0.16,0),
+              mkBox(1.46,0.2,1.96,'fabric','ivory',0,0.42,0),
+              mkBox(1.5,0.75,0.12,'wood','walnut',0,0.68,-1.04),
+              mkBox(0.45,0.12,0.3,'fabric','ivory',-0.35,0.58,-0.78),
+              mkBox(0.45,0.12,0.3,'fabric','ivory',0.35,0.58,-0.78))},
+  sofa:     {icon:'🛋️', label:'โซฟา', build:()=>mkGroup(
+              mkBox(1.9,0.36,0.85,'fabric','denim',0,0.22,0),
+              mkBox(1.9,0.52,0.18,'fabric','denim',0,0.62,-0.33),
+              mkBox(0.18,0.46,0.85,'fabric','denim',-0.86,0.58,0),
+              mkBox(0.18,0.46,0.85,'fabric','denim',0.86,0.58,0),
+              ...mkLegs('wood','ebony',[[0.8,0.34],[-0.8,0.34],[0.8,-0.34],[-0.8,-0.34]],0.05,0.06,0.1))},
+  table:    {icon:'🍽️', label:'โต๊ะ', build:()=>mkGroup(
+              mkBox(1.4,0.05,0.8,'wood','oak',0,0.74,0),
+              ...mkLegs('metal','black',[[0.64,0.34],[-0.64,0.34],[0.64,-0.34],[-0.64,-0.34]],0.37,0.05,0.74))},
+  chair:    {icon:'🪑', label:'เก้าอี้', build:()=>mkGroup(
+              mkBox(0.45,0.07,0.45,'fabric','charcoal',0,0.44,0),
+              mkBox(0.45,0.5,0.06,'wood','ebony',0,0.72,-0.2),
+              ...mkLegs('wood','ebony',[[0.18,0.18],[-0.18,0.18],[0.18,-0.18],[-0.18,-0.18]],0.22,0.04,0.44))},
+  wardrobe: {icon:'🧥', label:'ตู้เสื้อผ้า', build:()=>mkGroup(
+              mkBox(1.1,2.0,0.58,'wood','walnut',0,1.0,0),
+              mkBox(0.015,1.9,0.02,'metal','steel',0,1.0,0.3),
+              mkBox(0.04,0.22,0.04,'metal','gold',-0.1,1.0,0.31),
+              mkBox(0.04,0.22,0.04,'metal','gold',0.1,1.0,0.31))},
+  shelf:    {icon:'🗄️', label:'ชั้นวาง', build:()=>{
+              const g = mkGroup(mkBox(0.95,1.8,0.34,'wood','walnut',0,0.9,0));
+              for(let i=1;i<5;i++) g.add(mkBox(0.88,0.025,0.3,'wood','ebony',0,i*0.36,0.012));
+              return g;}},
+  tv:       {icon:'📺', label:'ทีวี', build:()=>mkGroup(
+              mkBox(1.3,0.03,0.4,'wood','ebony',0,0.45,0),
+              mkBox(1.25,0.72,0.04,'metal','black',0,0.92,0),
+              mkBox(0.12,0.34,0.12,'metal','steel',0,0.63,0))},
+  lamp:     {icon:'💡', label:'โคมไฟ', build:()=>mkGroup(
+              mkCyl(0.2,0.22,0.03,'metal','black',0,0.02,0),
+              mkCyl(0.022,0.022,1.2,'metal','black',0,0.62,0),
+              mkCone(0.24,0.36,'fabric','ivory',0,1.35,0))},
+  rug:      {icon:'🟫', label:'พรม', build:()=>mkGroup(
+              mkBox(2.0,0.018,1.4,'fabric','olive',0,0.012,0))},
+  plant:    {icon:'🌿', label:'ต้นไม้', build:()=>mkGroup(
+              mkCyl(0.19,0.24,0.34,'stone','sand',0,0.17,0),
+              mkCone(0.36,0.75,'fabric','olive',0,0.75,0),
+              mkCone(0.28,0.6,'fabric','olive',0,1.08,0))},
+  fridge:   {icon:'🧊', label:'ตู้เย็น', build:()=>mkGroup(
+              mkBox(0.72,1.8,0.7,'metal','steel',0,0.9,0),
+              mkBox(0.74,0.02,0.02,'metal','black',0,1.2,0.36))},
+  mirror:   {icon:'🪞', label:'กระจก', build:()=>mkGroup(
+              mkBox(0.7,1.4,0.05,'metal','gold',0,0.7,0),
+              mkBox(0.6,1.3,0.012,'glass','tinted',0,0.7,0.035))},
+  vase:     {icon:'🏺', label:'ของตกแต่ง', build:()=>mkGroup(
+              mkCyl(0.1,0.16,0.36,'marble','rose',0,0.18,0))},
+  pallet:   {icon:'📦', label:'พาเลท', build:()=>mkGroup(
+              mkBox(1.2,0.14,0.8,'wood','pine',0,0.07,0),
+              mkBox(1.1,0.6,0.7,'stone','sand',0,0.44,0))},
+  rack:     {icon:'🏗️', label:'ชั้นแร็ค', build:()=>{
+              const g = mkGroup();
+              [[-0.85,-0.35],[0.85,-0.35],[-0.85,0.35],[0.85,0.35]]
+                .forEach(p=>g.add(mkBox(0.08,2.2,0.08,'metal','steel',p[0],1.1,p[1])));
+              for(let i=0;i<3;i++) g.add(mkBox(1.8,0.06,0.8,'metal','steel',0,0.5+i*0.7,0));
+              return g;}}
+};
+
+/* ══════════ 9. object state ══════════ */
+const items = [];
+let selected = null;
+let moveMode = false;
+let snapEnabled = true;
+
+const selBox = new THREE.Box3();
+const selHelper = new THREE.Box3Helper(selBox, 0x5b8cff);
+selHelper.visible = false;
+scene.add(selHelper);
+
+const tmpSize = new THREE.Vector3();
+/* FIX C15: ขนาดจริงไม่ขึ้นกับการหมุน */
+function localSize(obj){
+  const ry = obj.rotation.y;
+  obj.rotation.y = 0;
+  obj.updateMatrixWorld(true);
+  new THREE.Box3().setFromObject(obj).getSize(tmpSize);
+  obj.rotation.y = ry;
+  obj.updateMatrixWorld(true);
+  return tmpSize.clone();
+}
+function footprint(obj){
+  const s = localSize(obj);
+  const c = Math.abs(Math.cos(obj.rotation.y)), n = Math.abs(Math.sin(obj.rotation.y));
+  return {x: s.x*c + s.z*n, z: s.x*n + s.z*c, y: s.y};
+}
+function clampToRoom(obj){
+  const f = footprint(obj);
+  obj.position.x = clamp(obj.position.x, -roomW/2 + f.x/2, roomW/2 - f.x/2);
+  obj.position.z = clamp(obj.position.z, -roomD/2 + f.z/2, roomD/2 - f.z/2);
+  obj.position.y = 0;
+}
+/* FIX C9: กันซ้อนทับแบบง่าย (AABB push-out) */
+function resolveOverlap(obj){
+  const a = footprint(obj);
+  for(const other of items){
+    if(other === obj) continue;
+    const b = footprint(other);
+    const ox = (a.x+b.x)/2 - Math.abs(obj.position.x - other.position.x);
+    const oz = (a.z+b.z)/2 - Math.abs(obj.position.z - other.position.z);
+    if(ox > 0 && oz > 0){
+      if(ox < oz) obj.position.x += (obj.position.x >= other.position.x ? ox : -ox);
+      else        obj.position.z += (obj.position.z >= other.position.z ? oz : -oz);
+      clampToRoom(obj);
+    }
+  }
+}
+function addItem(kind){
+  const entry = CATALOG[kind];
+  if(!entry) return;
+  const obj = entry.build();
+  obj.userData = {kind, label:entry.label, base:null};
+  obj.userData.base = localSize(obj);
+  obj.position.set((Math.random()-0.5)*roomW*0.4, 0, (Math.random()-0.5)*roomD*0.4);
+  clampToRoom(obj); resolveOverlap(obj);
+  scene.add(obj); items.push(obj);
+  pushUndo(); selectObject(obj);
+  showToast(entry.label + ' · เพิ่มแล้ว');
+}
+function removeItem(obj){
+  const i = items.indexOf(obj);
+  if(i < 0) return;
+  items.splice(i,1);
+  scene.remove(obj);
+  disposeObject(obj);
+  if(selected === obj) selectObject(null);
+  pushUndo(); invalidate();
+}
+function selectObject(obj){
+  selected = obj;
+  qs('#sel').classList.toggle('on', !!obj);
+  selHelper.visible = !!obj;
+  if(obj){
+    selBox.setFromObject(obj);
+    selHelper.box.copy(selBox);
+    layoutSelBar();
+  } else {
+    moveMode = false;
+    qs('#tMove').classList.remove('on');
+  }
+  refreshMaterialPanel();
+  refreshPropsPanel();
+  invalidate();
+}
+function refreshSelection(){
+  if(!selected) return;
+  selBox.setFromObject(selected);
+  selHelper.box.copy(selBox);
+  refreshPropsPanel();
+  invalidate();
+}
+function layoutSelBar(){
+  const h = qs('#sheet').getBoundingClientRect().height;
+  qs('#sel').style.bottom = (h + 12) + 'px';
+  qs('#fps').style.bottom = (h + 10) + 'px';
+  qs('#toast').style.bottom = (h + 62) + 'px';
+}
+
+/* ══════════ 10. undo ══════════ */
+const undoStack = [];
+let undoLock = false;
+function takeSnapshot(){
+  return items.filter(o=>CATALOG[o.userData.kind]).map(o=>({
+    k: o.userData.kind,
+    p: o.position.toArray(),
+    r: o.rotation.y,
+    s: o.scale.toArray(),
+    m: o.children.map(c => (c.isMesh && c.userData.t) ? [c.userData.t, c.userData.v, c.userData.tier] : null)
+  }));
+}
+function pushUndo(){
+  if(undoLock) return;
+  undoStack.push(takeSnapshot());
+  if(undoStack.length > 30) undoStack.shift();
+}
+function restoreSnapshot(state){
+  undoLock = true;
+  items.slice().forEach(o=>{ scene.remove(o); disposeObject(o); });
+  items.length = 0;
+  state.forEach(s=>{
+    const entry = CATALOG[s.k];
+    if(!entry) return;
+    const o = entry.build();
+    o.userData = {kind:s.k, label:entry.label, base:null};
+    o.userData.base = localSize(o);
+    o.position.fromArray(s.p);
+    o.rotation.y = s.r;
+    o.scale.fromArray(s.s);
+    s.m.forEach((mm,i)=>{
+      const c = o.children[i];
+      if(mm && c && c.isMesh){
+        c.material = getMat(mm[0], mm[1], mm[2]);
+        c.userData = {t:mm[0], v:mm[1], tier:mm[2], owned:false};
+      }
+    });
+    scene.add(o); items.push(o);
+  });
+  undoLock = false;
+  selectObject(null);
+  invalidate();
+}
+
+/* ══════════ 11. input ══════════ */
+const raycaster = new THREE.Raycaster();
+const groundPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+const pointers = new Map();
+let pressTime = 0, pressX = 0, pressY = 0;
+let pinchDist = 0, pinchCX = 0, pinchCY = 0;
+let dragTarget = null;
+const hitPoint = new THREE.Vector3();
+const dragOffset = new THREE.Vector3();
+const UP = new THREE.Vector3(0,1,0);
+const fwdVec = new THREE.Vector3(), rightVec = new THREE.Vector3();
+
+function toNDC(x,y){
+  const {w,h} = viewSize();
+  return new THREE.Vector2((x/w)*2 - 1, -(y/h)*2 + 1);
+}
+/* FIX A9: raycast เฉพาะเฟอร์นิเจอร์ แล้วไต่ขึ้นหา root */
+function pickItem(x,y){
+  if(!items.length) return null;
+  raycaster.setFromCamera(toNDC(x,y), camera);
+  const hits = raycaster.intersectObjects(items, true);
+  if(!hits.length) return null;
+  let n = hits[0].object;
+  while(n && items.indexOf(n) === -1) n = n.parent;
+  return n || null;
+}
+function phiRange(){
+  return viewMode === 'walk' ? [0.35, 2.55] : [0.12, Math.PI/2 - 0.04];
+}
+
+canvasEl.addEventListener('pointerdown', e=>{
+  canvasEl.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if(pointers.size === 1){
+    pressTime = performance.now(); pressX = e.clientX; pressY = e.clientY;
+    if(moveMode && selected){
+      dragTarget = selected;
+      raycaster.setFromCamera(toNDC(e.clientX,e.clientY), camera);
+      if(raycaster.ray.intersectPlane(groundPlane, hitPoint)){
+        dragOffset.copy(selected.position).sub(hitPoint);
+      } else dragOffset.set(0,0,0);
+    }
+  }
+  if(pointers.size === 2){                       // FIX A10: seed ค่าตอนนิ้วที่ 2 ลง
+    const p = [...pointers.values()];
+    pinchDist = Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y) || 1;
+    pinchCX = (p[0].x+p[1].x)/2; pinchCY = (p[0].y+p[1].y)/2;
+    dragTarget = null;
+  }
+});
+
+canvasEl.addEventListener('pointermove', e=>{
+  const p = pointers.get(e.pointerId);
+  if(!p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y;
+  p.x = e.clientX; p.y = e.clientY;
+
+  if(pointers.size === 1){
+    if(dragTarget){
+      raycaster.setFromCamera(toNDC(e.clientX,e.clientY), camera);
+      if(raycaster.ray.intersectPlane(groundPlane, hitPoint)){
+        dragTarget.position.copy(hitPoint).add(dragOffset);
+        if(snapEnabled){
+          dragTarget.position.x = Math.round(dragTarget.position.x/0.1)*0.1;
+          dragTarget.position.z = Math.round(dragTarget.position.z/0.1)*0.1;
+        }
+        clampToRoom(dragTarget);
+        selBox.setFromObject(dragTarget);
+        selHelper.box.copy(selBox);
+      }
+    } else {
+      const [lo,hi] = phiRange();
+      orbit.theta -= dx * 0.006;
+      orbit.phi = clamp(orbit.phi - dy * 0.006, lo, hi);
+    }
+    invalidate();
+  } else if(pointers.size === 2){
+    const p2 = [...pointers.values()];
+    const d = Math.hypot(p2[0].x-p2[1].x, p2[0].y-p2[1].y) || 1;
+    const cx = (p2[0].x+p2[1].x)/2, cy = (p2[0].y+p2[1].y)/2;
+
+    orbit.r = clamp(orbit.r * (pinchDist/d), viewMode==='walk'?0.2:1.2, 30);
+
+    /* FIX C11: pan เป้ากล้องด้วยสองนิ้ว */
+    const pdx = cx - pinchCX, pdy = cy - pinchCY;
+    camera.getWorldDirection(fwdVec); fwdVec.y = 0; fwdVec.normalize();
+    rightVec.copy(fwdVec).cross(UP).normalize();
+    const k = orbit.r * 0.0022;
+    orbitTarget.addScaledVector(rightVec, -pdx * k);
+    orbitTarget.addScaledVector(fwdVec,    pdy * k);
+    orbitTarget.x = clamp(orbitTarget.x, -roomW/2, roomW/2);
+    orbitTarget.z = clamp(orbitTarget.z, -roomD/2, roomD/2);
+
+    pinchDist = d; pinchCX = cx; pinchCY = cy;
+    invalidate();
+  }
+});
+
+function onPointerUp(e){
+  const moved = Math.hypot(e.clientX - pressX, e.clientY - pressY);
+  if(pointers.size === 1 && performance.now() - pressTime < 280 && moved < 10 && !dragTarget){
+    selectObject(pickItem(e.clientX, e.clientY));
+  }
+  if(dragTarget){ resolveOverlap(dragTarget); refreshSelection(); pushUndo(); dragTarget = null; }
+  pointers.delete(e.pointerId);
+}
+canvasEl.addEventListener('pointerup', onPointerUp);
+canvasEl.addEventListener('pointercancel', e=>{ pointers.delete(e.pointerId); dragTarget = null; });
+canvasEl.addEventListener('wheel', e=>{
+  e.preventDefault();
+  orbit.r = clamp(orbit.r * (1 + Math.sign(e.deltaY)*0.09), 0.2, 30);
+  invalidate();
+}, {passive:false});
+
+/* ══════════ 12. camera modes ══════════ */
+let viewMode = '3d';
+function applyView(mode){
+  viewMode = mode;
+  if(mode === 'top'){
+    orbit.phi = 0.13; orbit.r = Math.max(roomW, roomD) * 1.45;
+    orbitTarget.set(0,0,0); hideWalls = true; camera.fov = 52;
+  } else if(mode === 'walk'){
+    orbit.phi = Math.PI/2 - 0.02; orbit.r = 0.4;
+    orbitTarget.set(0, 1.55, 0); hideWalls = false; camera.fov = 72;
+  } else {
+    orbit.phi = 1.05; orbit.r = Math.max(roomW, roomD) * 1.7;
+    orbitTarget.set(0, 1, 0); hideWalls = false; camera.fov = 52;
+  }
+  qs('#bWall').classList.toggle('on', hideWalls);
+  camera.updateProjectionMatrix();
+  invalidate();
+}
+qs('#seg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  [...e.currentTarget.children].forEach(x=>x.classList.toggle('on', x===b));
+  applyView(b.dataset.view);
+});
+qs('#bCam').onclick = ()=>{ applyView(viewMode); showToast('รีเซ็ตมุมกล้อง'); };
+qs('#bSnap').onclick = e=>{
+  snapEnabled = !snapEnabled;
+  e.currentTarget.classList.toggle('on', snapEnabled);
+  showToast(snapEnabled ? 'สแนปทุก 10 ซม.' : 'ย้ายอิสระ');
+};
+qs('#bWall').onclick = e=>{
+  hideWalls = !hideWalls;
+  e.currentTarget.classList.toggle('on', hideWalls);
+  invalidate();
+};
+qs('#bUndo').onclick = ()=>{
+  if(undoStack.length < 2){ showToast('ไม่มีอะไรให้ย้อน'); return; }
+  undoStack.pop();
+  restoreSnapshot(undoStack[undoStack.length-1]);
+  showToast('ย้อนกลับแล้ว');
+};
+
+/* ══════════ 13. selection toolbar ══════════ */
+qs('#tRotL').onclick = ()=>{ if(selected){ selected.rotation.y += Math.PI/12; clampToRoom(selected); pushUndo(); refreshSelection(); } };
+qs('#tRotR').onclick = ()=>{ if(selected){ selected.rotation.y -= Math.PI/12; clampToRoom(selected); pushUndo(); refreshSelection(); } };
+qs('#tMove').onclick = e=>{
+  if(!selected){ showToast('เลือกวัตถุก่อน'); return; }
+  moveMode = !moveMode;
+  e.currentTarget.classList.toggle('on', moveMode);
+  showToast(moveMode ? 'ลากนิ้วเพื่อย้ายวัตถุ' : 'กลับไปหมุนกล้อง');
+};
+qs('#tDup').onclick = ()=>{
+  if(!selected) return;
+  const kind = selected.userData.kind;
+  const entry = CATALOG[kind];
+  if(!entry){ showToast('ทำซ้ำโมเดลที่อัปโหลดไม่ได้'); return; }
+  const o = entry.build();
+  o.userData = {kind, label:entry.label, base:null};
+  o.userData.base = localSize(o);
+  o.position.copy(selected.position).add(new THREE.Vector3(0.4,0,0.4));
+  o.rotation.y = selected.rotation.y;
+  o.scale.copy(selected.scale);
+  selected.children.forEach((c,i)=>{
+    const t = o.children[i];
+    if(c.isMesh && t && t.isMesh && c.userData.t){
+      t.material = getMat(c.userData.t, c.userData.v, c.userData.tier);
+      t.userData = {t:c.userData.t, v:c.userData.v, tier:c.userData.tier, owned:false};
     }
   });
-  return totalSavedKm*CO2_FACTOR_KG_PER_KM;
+  clampToRoom(o); resolveOverlap(o);
+  scene.add(o); items.push(o);
+  pushUndo(); selectObject(o); showToast('ทำซ้ำแล้ว');
+};
+qs('#tDel').onclick  = ()=>{ if(selected){ removeItem(selected); showToast('ลบแล้ว'); } };
+qs('#bDel2').onclick = ()=>{ if(selected){ removeItem(selected); showToast('ลบแล้ว'); } };
+
+/* ══════════ 14. bottom sheet ══════════ */
+const sheetEl = qs('#sheet');
+let sheetHeight = 96;
+const sheetSnaps = ()=>[96, Math.round(innerHeight*0.45), Math.round(innerHeight*0.82)];
+function setSheetHeight(h, animate){
+  sheetEl.classList.toggle('drag', animate === false);
+  sheetHeight = h;
+  sheetEl.style.height = h + 'px';
+  layoutSelBar();
 }
-function renderRouteMapSVG(routeStops){
-  const allPoints = [DEPOT, ...routeStops];
-  const xs = allPoints.map(p=>p.x), ys = allPoints.map(p=>p.y);
-  const minX = Math.min(...xs)-4, maxX = Math.max(...xs)+4;
-  const minY = Math.min(...ys)-4, maxY = Math.max(...ys)+4;
-  const w=300, h=220;
-  const sx = x => ((x-minX)/(maxX-minX))*w;
-  const sy = y => h-((y-minY)/(maxY-minY))*h;
-  let path = `M ${sx(DEPOT.x)} ${sy(DEPOT.y)} `;
-  routeStops.forEach(s=>{ path += `L ${sx(s.x)} ${sy(s.y)} `; });
-  path += `L ${sx(DEPOT.x)} ${sy(DEPOT.y)}`;
-  const dots = routeStops.map((s,idx)=>`
-    <circle cx="${sx(s.x)}" cy="${sy(s.y)}" r="11" fill="var(--accent)"></circle>
-    <text x="${sx(s.x)}" y="${sy(s.y)+4}" font-size="10" fill="#fff" text-anchor="middle" font-weight="600">${idx+1}</text>
-    <text x="${sx(s.x)}" y="${sy(s.y)+24}" font-size="9" fill="#6E6656" text-anchor="middle">${s.name}</text>
-  `).join('');
-  return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-auto">
-    <path d="${path}" fill="none" stroke="#2E4A3A" stroke-width="2" stroke-dasharray="5,4"></path>
-    <circle cx="${sx(DEPOT.x)}" cy="${sy(DEPOT.y)}" r="10" fill="#2E4A3A"></circle>
-    <text x="${sx(DEPOT.x)}" y="${sy(DEPOT.y)+4}" font-size="11" fill="#fff" text-anchor="middle">🏭</text>
-    ${dots}
-  </svg>`;
+qs('#grab').addEventListener('pointerdown', e=>{
+  e.currentTarget.setPointerCapture(e.pointerId);
+  const startY = e.clientY, startH = sheetHeight;
+  function move(ev){ setSheetHeight(clamp(startH - (ev.clientY - startY), 80, innerHeight*0.9), false); }
+  function end(){
+    document.removeEventListener('pointermove', move);
+    const near = sheetSnaps().reduce((a,b)=> Math.abs(b-sheetHeight) < Math.abs(a-sheetHeight) ? b : a);
+    sheetEl.classList.remove('drag');
+    setSheetHeight(near, true);
+  }
+  document.addEventListener('pointermove', move);
+  document.addEventListener('pointerup', end, {once:true});
+});
+const PANE_ID = {cat:'#paneCat', mat:'#paneMat', prop:'#paneProp', room:'#paneRoom'};
+qs('#tabs').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  [...e.currentTarget.children].forEach(x=>x.classList.toggle('on', x===b));
+  Object.keys(PANE_ID).forEach(k=> qs(PANE_ID[k]).classList.toggle('on', k===b.dataset.tab));
+  if(sheetHeight < 200) setSheetHeight(sheetSnaps()[1], true);
+});
+
+/* ══════════ 15. catalog UI (สร้างด้วย DOM API ไม่ใช้ innerHTML) ══════════ */
+const catGrid = qs('#catGrid');
+Object.keys(CATALOG).forEach(key=>{
+  const entry = CATALOG[key];
+  const b = document.createElement('button');
+  b.className = 'chip';
+  const i = document.createElement('b'); i.textContent = entry.icon;
+  b.append(i, document.createTextNode(entry.label));
+  b.onclick = ()=>addItem(key);
+  catGrid.appendChild(b);
+});
+{
+  const b = document.createElement('button');
+  b.className = 'chip up';
+  const i = document.createElement('b'); i.textContent = '📦';
+  b.append(i, document.createTextNode('อัปโหลด GLB'));
+  b.onclick = ()=>qs('#glbInput').click();
+  catGrid.appendChild(b);
 }
 
-/* =========================================================
-   STATE
-========================================================= */
-const state = {
-  role: null,
-  screen: 'home',
-  customerIdView: 'C1',
-  driverIdView: 'D1',
-  routeDriverId: 'D1',
-  cart: [],
-  designer: { placed: [] },
-  aiStylist: { photo:null, styleText:'', result:null },
-  productFilter: 'ทั้งหมด',
-  orderTab: 'all',
-  masterTab: 'customers',
+/* ══════════ 16. GLB loader ══════════ */
+const dracoLoader = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/libs/draco/');
+const gltfLoader = new GLTFLoader().setDRACOLoader(dracoLoader);
+qs('#glbInput').onchange = e=>{
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  if(file.size > 40*1024*1024){ showToast('ไฟล์ใหญ่เกิน 40 MB'); return; }
+  showToast('กำลังโหลด ' + file.name + ' …');
+  const fr = new FileReader();
+  fr.onload = ()=>{
+    gltfLoader.parse(fr.result, '', g=>{
+      const obj = g.scene;
+      const size = new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3());
+      obj.scale.setScalar(1 / (Math.max(size.x,size.y,size.z) || 1));
+      obj.updateMatrixWorld(true);
+      const b2 = new THREE.Box3().setFromObject(obj);
+      obj.position.y = -b2.min.y;
+      obj.traverse(n=>{
+        if(n.isMesh){
+          n.castShadow = true; n.receiveShadow = true;
+          n.userData = {owned:true, ownTextures:true};
+          if(n.material) n.material.envMapIntensity = 0.85;
+        }
+      });
+      obj.userData = {kind:'glb', label:file.name, base:localSize(obj)};
+      clampToRoom(obj);
+      scene.add(obj); items.push(obj);
+      selectObject(obj); showToast('เพิ่มโมเดลแล้ว');
+    }, ()=>showToast('ไฟล์เสียหายหรือไม่รองรับ (รองรับ .glb เท่านั้น)'));
+  };
+  fr.onerror = ()=>showToast('อ่านไฟล์ไม่สำเร็จ');
+  fr.readAsArrayBuffer(file);
 };
 
-/* =========================================================
-   TOASTS
-========================================================= */
-function toast(msg, type='default'){
-  const root = document.getElementById('toast-root');
-  const colors = {default:'bg-[var(--ink)]', success:'bg-[var(--success)]', warn:'bg-[var(--warn)]', danger:'bg-[var(--danger)]'};
-  const el = document.createElement('div');
-  el.className = `toast pointer-events-auto ${colors[type]||colors.default} text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg max-w-[90%] text-center`;
-  el.textContent = msg;
-  root.appendChild(el);
-  setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 2400);
+/* ══════════ 17. material panel ══════════ */
+let currentMatType = 'wood';
+function firstStyledMesh(obj){
+  let found = null;
+  obj.traverse(n=>{ if(!found && n.isMesh && n.userData && n.userData.t) found = n; });
+  return found;
 }
+function refreshMaterialPanel(){
+  const mesh = selected ? firstStyledMesh(selected) : null;
+  qs('#matEmpty').style.display = mesh ? 'none' : 'block';
+  qs('#matUI').hidden = !mesh;
+  if(!mesh) return;
+  currentMatType = mesh.userData.t;
 
-/* =========================================================
-   MODAL
-========================================================= */
-function openModal(innerHtml){
-  const root = document.getElementById('modal-root');
-  root.innerHTML = `<div class="modal-backdrop" onclick="if(event.target===this)closeModal()">
-    <div class="modal-sheet px-5 pt-4 pb-8">
-      <div class="w-10 h-1.5 bg-[var(--line)] rounded-full mx-auto mb-4"></div>
-      ${innerHtml}
-    </div>
-  </div>`;
+  const cats = qs('#matCats');
+  cats.textContent = '';
+  Object.keys(MATS).forEach(type=>{
+    const b = document.createElement('button');
+    b.className = 'mcat' + (type === currentMatType ? ' on' : '');
+    b.textContent = MAT_TH[type];
+    b.onclick = ()=>{
+      currentMatType = type;
+      [...cats.children].forEach(c=>c.classList.toggle('on', c===b));
+      renderSwatches();
+    };
+    cats.appendChild(b);
+  });
+  renderSwatches();
+  qs('#sRough').value = mesh.material.roughness;
+  qs('#oRough').textContent = Number(mesh.material.roughness).toFixed(2);
+  qs('#sMetal').value = mesh.material.metalness;
+  qs('#oMetal').textContent = Number(mesh.material.metalness).toFixed(2);
 }
-function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+function renderSwatches(){
+  const wrap = qs('#matSw');
+  wrap.textContent = '';
+  const mesh = selected ? firstStyledMesh(selected) : null;
+  const curVar = mesh ? mesh.userData.v : null;
+  Object.keys(MATS[currentMatType]).forEach(variant=>{
+    const hex = MATS[currentMatType][variant];
+    const b = document.createElement('button');
+    b.className = 'sw' + (variant === curVar ? ' on' : '');
+    b.style.background = '#' + hex.toString(16).padStart(6,'0');
+    const s = document.createElement('span'); s.textContent = variant;
+    b.appendChild(s);
+    b.onclick = ()=>applyMaterial(currentMatType, variant);
+    wrap.appendChild(b);
+  });
+}
+function applyMaterial(type, variant){
+  if(!selected) return;
+  selected.traverse(n=>{
+    if(!n.isMesh || !n.userData || !n.userData.t) return;
+    if(n.userData.t === 'glass') return;                 // ไม่ทับกระจก
+    n.material = getMat(type, variant, n.userData.tier || 1);
+    n.userData = {t:type, v:variant, tier:n.userData.tier || 1, owned:false};
+  });
+  pushUndo(); refreshMaterialPanel(); invalidate();
+  showToast(MAT_TH[type] + ' · ' + variant);
+}
+/* clone material ก่อนปรับค่าเฉพาะชิ้น — และ "ไม่" dispose texture ที่แชร์ */
+function makeOwnMaterials(obj){
+  obj.traverse(n=>{
+    if(n.isMesh && n.material && (!n.userData || !n.userData.owned)){
+      n.material = n.material.clone();
+      n.userData = Object.assign({}, n.userData, {owned:true, ownTextures:false});
+    }
+  });
+}
+qs('#sRough').oninput = e=>{
+  if(!selected) return;
+  makeOwnMaterials(selected);
+  const v = +e.target.value;
+  selected.traverse(n=>{ if(n.isMesh && n.material && 'roughness' in n.material) n.material.roughness = v; });
+  qs('#oRough').textContent = v.toFixed(2);
+  invalidate();
+};
+qs('#sMetal').oninput = e=>{
+  if(!selected) return;
+  makeOwnMaterials(selected);
+  const v = +e.target.value;
+  selected.traverse(n=>{ if(n.isMesh && n.material && 'metalness' in n.material) n.material.metalness = v; });
+  qs('#oMetal').textContent = v.toFixed(2);
+  invalidate();
+};
 
-/* =========================================================
-   NAVIGATION
-========================================================= */
-function loginAs(role){
-  state.role = role;
-  if(role==='customer') state.screen='home';
-  if(role==='admin') state.screen='dashboard';
-  if(role==='driver') state.screen='jobs';
-  render();
+/* ══════════ 18. properties panel ══════════ */
+function refreshPropsPanel(){
+  qs('#propEmpty').style.display = selected ? 'none' : 'block';
+  qs('#propUI').hidden = !selected;
+  if(!selected) return;
+  const base = selected.userData.base || localSize(selected);
+  const sc = selected.scale;
+  qs('#propName').textContent = selected.userData.label || 'วัตถุ';
+  const set = (sid, oid, val)=>{ qs(sid).value = Math.round(val); qs(oid).textContent = Math.round(val); };
+  set('#sW','#oW', base.x*sc.x*100);
+  set('#sH','#oH', base.y*sc.y*100);
+  set('#sD','#oD', base.z*sc.z*100);
+  const deg = (Math.round(THREE.MathUtils.radToDeg(selected.rotation.y)) % 360 + 360) % 360;
+  qs('#sR').value = Math.round(deg/5)*5;
+  qs('#oR').textContent = deg;
 }
-function switchRole(){
-  openModal(`
-    <h3 class="font-display font-semibold text-lg mb-1">สลับบทบาทผู้ใช้งาน</h3>
-    <p class="text-sm text-[var(--ink-soft)] mb-4">เลือกมุมมองที่ต้องการใช้งานระบบ</p>
-    <div class="space-y-2">
-      ${roleBtn('customer','ลูกค้า','เลือกซื้อสินค้า ออกแบบห้อง 3D และ AR')}
-      ${roleBtn('admin','แอดมิน','บริหารจัดการร้านและการขนส่ง')}
-      ${roleBtn('driver','คนขับ','รับงานและอัปเดตสถานะจัดส่ง')}
-    </div>
-  `);
-}
-function roleBtn(role,title,desc){
-  const active = state.role===role;
-  return `<button onclick="closeModal();loginAs('${role}')" class="w-full text-left p-3.5 rounded-2xl border ${active?'border-[var(--primary)] bg-[var(--primary)]/5':'border-[var(--line)] bg-white'} flex items-center justify-between">
-    <div><div class="font-semibold">${title}</div><div class="text-xs text-[var(--ink-soft)]">${desc}</div></div>
-    ${active?'<span class="text-[var(--primary)] text-xl">✓</span>':''}
-  </button>`;
-}
-function navigateTo(screen){ state.screen = screen; render(); }
-
-/* =========================================================
-   HEADER / NAV RENDER
-========================================================= */
-function screenTitle(){
-  const map = {
-    home:'ร้านเฟอร์นิเจอร์', design:'ออกแบบห้อง 3D', cart:'ตะกร้าสินค้า', orders:'คำสั่งซื้อของฉัน', aiStylist:'AI Interior Stylist',
-    dashboard:'ภาพรวมธุรกิจ', products:'จัดการสินค้า', adminorders:'จัดการคำสั่งซื้อ', master:'ข้อมูลหลัก', routes:'จัดเส้นทางอัจฉริยะ',
-    jobs:'งานที่ได้รับมอบหมาย', history:'ประวัติงาน',
+function bindDim(sid, oid, axis){
+  qs(sid).oninput = e=>{
+    if(!selected) return;
+    const base = selected.userData.base;
+    if(!base || !base[axis]) return;
+    selected.scale[axis] = Math.max(0.05, (+e.target.value/100) / base[axis]);
+    qs(oid).textContent = Math.round(+e.target.value);
+    clampToRoom(selected);
+    refreshSelection();
   };
-  return map[state.screen] || 'โรงไม้';
+  qs(sid).onchange = ()=>pushUndo();
 }
-function renderHeader(){
-  const el = document.getElementById('header');
-  if(!state.role){ el.innerHTML=''; return; }
-  const unread = db.notifications.length;
-  el.innerHTML = `
-    <div class="flex items-center gap-2 min-w-0">
-      <div class="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-base shrink-0">🪵</div>
-      <div class="font-display font-semibold text-[15px] truncate">${screenTitle()}</div>
-    </div>
-    <div class="flex items-center gap-1.5 shrink-0">
-      <button onclick="showNotifications()" class="relative w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-        <span class="text-base">🔔</span>
-        ${unread?`<span class="absolute -top-0.5 -right-0.5 bg-[var(--accent)] text-[10px] leading-none font-bold rounded-full w-4 h-4 flex items-center justify-center">${unread>9?'9+':unread}</span>`:''}
-      </button>
-      <button onclick="switchRole()" class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-base">
-        ${state.role==='admin'?'🛠️':state.role==='driver'?'🚚':'🙂'}
-      </button>
-    </div>`;
+bindDim('#sW','#oW','x');
+bindDim('#sH','#oH','y');
+bindDim('#sD','#oD','z');
+qs('#sR').oninput = e=>{
+  if(!selected) return;
+  selected.rotation.y = THREE.MathUtils.degToRad(+e.target.value);
+  qs('#oR').textContent = e.target.value;
+  clampToRoom(selected);
+  refreshSelection();
+};
+qs('#sR').onchange = ()=>pushUndo();
+qs('#bWallSnap').onclick = ()=>{
+  if(!selected) return;
+  const f = footprint(selected), p = selected.position;
+  const dl = Math.abs(p.x + roomW/2), dr = Math.abs(roomW/2 - p.x);
+  const db = Math.abs(p.z + roomD/2), df = Math.abs(roomD/2 - p.z);
+  const m = Math.min(dl,dr,db,df);
+  if(m === dl){ selected.rotation.y = Math.PI/2; }
+  else if(m === dr){ selected.rotation.y = -Math.PI/2; }
+  else if(m === db){ selected.rotation.y = 0; }
+  else { selected.rotation.y = Math.PI; }
+  const f2 = footprint(selected);
+  if(m === dl) p.x = -roomW/2 + f2.x/2;
+  else if(m === dr) p.x = roomW/2 - f2.x/2;
+  else if(m === db) p.z = -roomD/2 + f2.z/2;
+  else p.z = roomD/2 - f2.z/2;
+  clampToRoom(selected); pushUndo(); refreshSelection();
+  showToast('จัดชิดผนังแล้ว');
+};
+
+/* ══════════ 19. room panel ══════════ */
+function bindSlider(sid, oid, fmt, fn){
+  qs(sid).oninput = e=>{ const v = +e.target.value; qs(oid).textContent = fmt(v); fn(v); };
 }
-function showNotifications(){
-  openModal(`
-    <h3 class="font-display font-semibold text-lg mb-3">การแจ้งเตือน</h3>
-    <div class="space-y-2 max-h-[60vh] overflow-y-auto">
-    ${db.notifications.length===0?'<p class="text-sm text-[var(--ink-soft)] py-6 text-center">ยังไม่มีการแจ้งเตือน</p>':db.notifications.map(n=>`
-      <div class="card p-3">
-        <p class="text-sm">${n.text}</p>
-        <div class="flex items-center gap-2 mt-1.5">
-          <span class="text-[11px] text-[var(--ink-soft)]">${n.time}</span>
-          ${n.channels.map(c=>`<span class="chip bg-[var(--line)] text-[var(--ink-soft)]">${c==='line'?'LINE':c==='email'?'Email':'ในแอป'}</span>`).join('')}
-        </div>
-      </div>`).join('')}
-    </div>
-  `);
-}
-function navItem(screen,icon,label){
-  const active = state.screen===screen;
-  return `<button onclick="navigateTo('${screen}')" class="tab-btn flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5" style="color:${active?'var(--primary)':'var(--ink-soft)'}">
-    <span class="text-[19px]">${icon}</span>
-    <span class="text-[10px] font-medium">${label}</span>
-  </button>`;
-}
-function renderBottomNav(){
-  const el = document.getElementById('bottomnav');
-  if(!state.role){ el.innerHTML=''; return; }
-  let items = '';
-  if(state.role==='customer'){
-    items = navItem('home','🏠','หน้าแรก') + navItem('design','🛋️','ออกแบบ') +
-      navItem('cart',`🛒${state.cart.length?` ${state.cart.length}`:''}`,'ตะกร้า') + navItem('orders','📦','ออเดอร์');
-  } else if(state.role==='admin'){
-    items = navItem('dashboard','📊','แดชบอร์ด') + navItem('products','🪑','สินค้า') +
-      navItem('adminorders','🚛','คำสั่งซื้อ') + navItem('routes','🗺️','เส้นทาง') + navItem('master','🗂️','ข้อมูลหลัก');
-  } else if(state.role==='driver'){
-    items = navItem('jobs','📋','งานของฉัน') + navItem('history','🕘','ประวัติ');
-  }
-  el.innerHTML = `<div class="flex">${items}</div>`;
-}
+bindSlider('#rW','#orW', v=>v.toFixed(1), v=>{ roomW = v; buildRoom(); items.forEach(clampToRoom); });
+bindSlider('#rD','#orD', v=>v.toFixed(1), v=>{ roomD = v; buildRoom(); items.forEach(clampToRoom); });
+bindSlider('#rH','#orH', v=>v.toFixed(2), v=>{ roomH = v; buildRoom(); });
+bindSlider('#lTime','#olTime',
+  v => String(Math.floor(v)).padStart(2,'0') + ':' + (v % 1 ? '30' : '00'),
+  setSunTime);
+bindSlider('#lInt','#olInt', v=>v.toFixed(2), v=>{ sunLight.intensity = v; invalidate(); });
 
-/* =========================================================
-   MASTER RENDER
-========================================================= */
-function render(){
-  renderHeader();
-  renderBottomNav();
-  const content = document.getElementById('content');
-  content.classList.toggle('no-header', !state.role);
-  if(!state.role){ content.innerHTML = renderLogin(); return; }
-
-  let html = '';
-  if(state.role==='customer'){
-    if(state.screen==='home') html = renderCustomerHome();
-    else if(state.screen==='design') html = renderDesignerShell();
-    else if(state.screen==='cart') html = renderCart();
-    else if(state.screen==='orders') html = renderCustomerOrders();
-    else if(state.screen==='aiStylist') html = renderAIStylist();
-  } else if(state.role==='admin'){
-    if(state.screen==='dashboard') html = renderDashboard();
-    else if(state.screen==='products') html = renderProductsAdmin();
-    else if(state.screen==='adminorders') html = renderOrdersAdmin();
-    else if(state.screen==='master') html = renderMaster();
-    else if(state.screen==='routes') html = renderRoutesAdmin();
-  } else if(state.role==='driver'){
-    if(state.screen==='jobs') html = renderDriverJobs();
-    else if(state.screen==='history') html = renderDriverHistory();
-  }
-  content.innerHTML = html;
-
-  if(state.role==='customer' && state.screen==='design'){ initThree(); }
-  else { stopThree(); }
-}
-
-/* =========================================================
-   LOGIN
-========================================================= */
-function renderLogin(){
-  return `
-  <div class="h-full flex flex-col justify-center px-7" style="background:linear-gradient(180deg,var(--primary) 0%, var(--primary-dark) 65%);color:#fff;">
-    <div class="mb-10 text-center">
-      <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-3xl mx-auto mb-4">🪵</div>
-      <h1 class="font-display text-3xl font-semibold">โรงไม้</h1>
-      <p class="text-white/70 text-sm mt-1">เฟอร์นิเจอร์ · ออกแบบห้อง 3D/AR · ระบบขนส่งอัจฉริยะ</p>
-    </div>
-    <div class="space-y-3">
-      <button onclick="loginAs('customer')" class="w-full bg-white text-[var(--primary-dark)] font-semibold rounded-2xl py-3.5 flex items-center justify-center gap-2">
-        <span>🙂</span> เข้าสู่ระบบในฐานะลูกค้า
-      </button>
-      <button onclick="loginAs('admin')" class="w-full bg-white/10 border border-white/25 text-white font-semibold rounded-2xl py-3.5 flex items-center justify-center gap-2">
-        <span>🛠️</span> เข้าสู่ระบบในฐานะแอดมิน
-      </button>
-      <button onclick="loginAs('driver')" class="w-full bg-white/10 border border-white/25 text-white font-semibold rounded-2xl py-3.5 flex items-center justify-center gap-2">
-        <span>🚚</span> เข้าสู่ระบบในฐานะคนขับ
-      </button>
-    </div>
-    <p class="text-center text-white/50 text-xs mt-8">เดโมระบบจำลอง — ไม่ต้องกรอกรหัสผ่านจริง</p>
-  </div>`;
-}
-
-/* =========================================================
-   CUSTOMER: HOME / CATALOG
-========================================================= */
-function renderCustomerHome(){
-  const cats = ['ทั้งหมด', ...new Set(db.products.map(p=>p.category))];
-  const list = db.products.filter(p=> state.productFilter==='ทั้งหมด' || p.category===state.productFilter);
-  return `
-  <div class="px-4 pt-4 pb-6">
-    <button onclick="navigateTo('design')" class="w-full rounded-2xl p-4 mb-3 text-left text-white relative overflow-hidden" style="background:linear-gradient(120deg,var(--primary),var(--primary-dark));">
-      <div class="relative z-10">
-        <div class="font-display font-semibold text-lg">ออกแบบห้องของคุณเป็นแบบ 3D</div>
-        <div class="text-sm text-white/75 mt-0.5">ลองจัดวางเฟอร์นิเจอร์ก่อนสั่งซื้อจริง</div>
-        <div class="inline-flex items-center gap-1 mt-3 bg-white text-[var(--primary-dark)] text-sm font-semibold px-3.5 py-1.5 rounded-full">เริ่มออกแบบ →</div>
-      </div>
-      <div class="absolute -right-2 -bottom-3 text-6xl opacity-25">🛋️</div>
-    </button>
-
-    <div class="grid grid-cols-2 gap-3 mb-4">
-      <button onclick="navigateTo('aiStylist')" class="card p-3 text-left">
-        <div class="text-2xl mb-1">🎨</div>
-        <div class="text-[12.5px] font-semibold leading-snug">AI Interior Stylist</div>
-        <div class="text-[10.5px] text-[var(--ink-soft)] mt-0.5">อัปโหลดรูปห้อง ให้ระบบจัดเซตให้</div>
-      </button>
-      <button onclick="openARView([db.products[0].id])" class="card p-3 text-left">
-        <div class="text-2xl mb-1">📷</div>
-        <div class="text-[12.5px] font-semibold leading-snug">ลองดูในห้องจริง (AR)</div>
-        <div class="text-[10.5px] text-[var(--ink-soft)] mt-0.5">ส่องกล้องวางเฟอร์นิเจอร์ทันที</div>
-      </button>
-    </div>
-
-    <div class="flex gap-2 overflow-x-auto scrollbar-x pb-1 mb-3">
-      ${cats.map(c=>`<button onclick="state.productFilter='${c}';render()" class="shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium ${state.productFilter===c?'btn-primary':'bg-white border border-[var(--line)] text-[var(--ink-soft)]'}">${c}</button>`).join('')}
-    </div>
-
-    <div class="grid grid-cols-2 gap-3">
-      ${list.map(p=>`
-        <div class="card p-3">
-          <div class="h-20 rounded-xl mb-2 flex items-center justify-center text-3xl" style="background:var(--accent-soft)">🪑</div>
-          <div class="text-[13px] font-semibold leading-snug line-clamp-2">${p.name}</div>
-          <div class="text-[11px] text-[var(--ink-soft)] mt-0.5">น้ำหนัก ${p.weight} กก.</div>
-          <div class="flex items-center justify-between mt-2">
-            <span class="font-display font-semibold text-[var(--accent)]">฿${fmt(p.price)}</span>
-            <button onclick="quickAddToCart('${p.id}')" class="w-7 h-7 rounded-full btn-accent flex items-center justify-center text-base leading-none">＋</button>
-          </div>
-          <div class="flex items-center gap-1 mt-1.5 flex-wrap">
-            ${p.recycledPct?`<span class="chip" style="background:var(--success-soft);color:var(--success);font-size:10px;padding:2px 7px;">♻️ รีไซเคิล ${p.recycledPct}%</span>`:''}
-            ${p.stock<=3?`<span class="text-[10px] text-[var(--danger)] font-medium">เหลือ ${p.stock} ชิ้น</span>`:''}
-          </div>
-        </div>`).join('')}
-    </div>
-  </div>`;
-}
-function quickAddToCart(productId){
-  const item = state.cart.find(i=>i.productId===productId);
-  if(item) item.qty++; else state.cart.push({productId, qty:1});
-  toast('เพิ่มลงตะกร้าแล้ว','success');
-  render();
-}
-
-/* =========================================================
-   CUSTOMER: 3D DESIGNER
-========================================================= */
-let three = { renderer:null, scene:null, camera:null, raf:null, target:null, spherical:{r:9,theta:0.8,phi:1.1}, dragging:false, lastX:0, lastY:0, itemsGroup:null, _onMove:null, _onUp:null };
-
-function renderDesignerShell(){
-  return `
-  <div class="h-full flex flex-col">
-    <div class="relative bg-[#EFE7D6]" style="height:40%;">
-      <canvas id="three-canvas" class="w-full h-full block"></canvas>
-      <div class="absolute bottom-2 left-2 right-2 text-center text-[11px] text-[var(--ink-soft)] bg-white/70 rounded-full py-1">ลากเพื่อหมุนมุมมองห้อง</div>
-    </div>
-    <div class="px-4 pt-3 pb-2">
-      <div class="font-display font-semibold text-sm mb-2">เลือกเฟอร์นิเจอร์เพื่อวางในห้อง</div>
-      <div class="flex gap-2.5 overflow-x-auto scrollbar-x pb-1">
-        ${db.products.map(p=>`
-          <button onclick="addToRoom('${p.id}')" class="shrink-0 w-[86px] card p-2 text-left">
-            <div class="h-10 rounded-lg mb-1 flex items-center justify-center text-xl" style="background:var(--accent-soft)">🪑</div>
-            <div class="text-[10.5px] font-medium leading-tight line-clamp-2">${p.name}</div>
-          </button>`).join('')}
-      </div>
-    </div>
-    <div class="flex-1 overflow-y-auto px-4 pb-3">
-      <div class="font-display font-semibold text-sm mb-2">รายการที่จัดวางในห้อง (<span id="placed-count">0</span>)</div>
-      <div id="placed-list" class="space-y-2"></div>
-    </div>
-    <div class="px-4 pb-4 pt-1 border-t border-[var(--line)] bg-[var(--bg)]">
-      <div class="flex items-center justify-between text-sm mb-2">
-        <span class="text-[var(--ink-soft)]">น้ำหนักรวมโดยประมาณ</span>
-        <span id="placed-weight" class="font-semibold">0 กก.</span>
-      </div>
-      <div class="grid grid-cols-2 gap-2.5">
-        <button onclick="openARView(state.designer.placed.map(i=>i.productId))" class="rounded-2xl py-3 font-semibold border" style="border-color:var(--primary);color:var(--primary)">📷 ดูในห้องจริง</button>
-        <button onclick="confirmDesign()" class="btn-primary font-semibold rounded-2xl py-3">ยืนยัน → ตะกร้า</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-function initThree(){
-  stopThree();
-  const canvas = document.getElementById('three-canvas');
-  if(!canvas) return;
-  const w = canvas.clientWidth, h = canvas.clientHeight;
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xEFE7D6);
-
-  const room = 6;
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(room,room), new THREE.MeshStandardMaterial({color:0xD9CBAE}));
-  floor.rotation.x = -Math.PI/2;
-  scene.add(floor);
-  const grid = new THREE.GridHelper(room, 12, 0xB8A67F, 0xCDBE9C);
-  scene.add(grid);
-
-  const wallMat = new THREE.MeshStandardMaterial({color:0xF3ECDD, side:THREE.DoubleSide, transparent:true, opacity:0.55});
-  const wallBack = new THREE.Mesh(new THREE.PlaneGeometry(room,2.6), wallMat);
-  wallBack.position.set(0,1.3,-room/2);
-  scene.add(wallBack);
-  const wallLeft = new THREE.Mesh(new THREE.PlaneGeometry(room,2.6), wallMat);
-  wallLeft.position.set(-room/2,1.3,0);
-  wallLeft.rotation.y = Math.PI/2;
-  scene.add(wallLeft);
-
-  const light1 = new THREE.HemisphereLight(0xffffff, 0x554433, 1.0);
-  scene.add(light1);
-  const light2 = new THREE.DirectionalLight(0xffffff, 0.6);
-  light2.position.set(4,6,3);
-  scene.add(light2);
-
-  const camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 100);
-  const target = new THREE.Vector3(0,0.4,0);
-
-  const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
-  renderer.setSize(w,h);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-
-  three.renderer = renderer; three.scene = scene; three.camera = camera; three.target = target;
-  three.itemsGroup = new THREE.Group();
-  scene.add(three.itemsGroup);
-
-  updateCamera();
-  rebuildRoomItems();
-
-  const onDown = (x,y)=>{ three.dragging=true; three.lastX=x; three.lastY=y; };
-  const onMove = (x,y)=>{
-    if(!three.dragging) return;
-    const dx = x-three.lastX, dy = y-three.lastY;
-    three.spherical.theta -= dx*0.006;
-    three.spherical.phi = Math.min(1.45, Math.max(0.3, three.spherical.phi - dy*0.006));
-    three.lastX=x; three.lastY=y;
-    updateCamera();
-  };
-  const onUp = ()=>{ three.dragging=false; };
-
-  canvas.addEventListener('mousedown', e=>onDown(e.clientX,e.clientY));
-  window.addEventListener('mousemove', e=>onMove(e.clientX,e.clientY));
-  window.addEventListener('mouseup', onUp);
-  canvas.addEventListener('touchstart', e=>{const t=e.touches[0]; onDown(t.clientX,t.clientY);}, {passive:true});
-  canvas.addEventListener('touchmove', e=>{const t=e.touches[0]; onMove(t.clientX,t.clientY);}, {passive:true});
-  canvas.addEventListener('touchend', onUp);
-  three._onMove = onMove; three._onUp = onUp;
-
-  function loop(){
-    three.raf = requestAnimationFrame(loop);
-    renderer.render(scene, camera);
-  }
-  loop();
-  renderPlacedList();
-}
-function updateCamera(){
-  const s = three.spherical;
-  const x = s.r * Math.sin(s.phi) * Math.sin(s.theta);
-  const y = s.r * Math.cos(s.phi);
-  const z = s.r * Math.sin(s.phi) * Math.cos(s.theta);
-  three.camera.position.set(x,y,z);
-  three.camera.lookAt(three.target);
-}
-function stopThree(){
-  if(three.raf) cancelAnimationFrame(three.raf);
-  if(three._onMove) window.removeEventListener('mousemove', three._onMove);
-  if(three._onUp) window.removeEventListener('mouseup', three._onUp);
-  three.raf=null; three.renderer=null; three.scene=null; three._onMove=null; three._onUp=null;
-}
-function addToRoom(productId){
-  const p = findProduct(productId);
-  state.designer.placed.push({productId, uid: 'it'+Date.now()+Math.random().toString(16).slice(2,4)});
-  toast(`วาง "${p.name}" ในห้องแล้ว`,'success');
-  rebuildRoomItems();
-  renderPlacedList();
-}
-function removeFromRoom(uid){
-  state.designer.placed = state.designer.placed.filter(i=>i.uid!==uid);
-  rebuildRoomItems();
-  renderPlacedList();
-}
-function rebuildRoomItems(){
-  if(!three.itemsGroup) return;
-  three.itemsGroup.clear();
-  const cols = 4, spacing = 1.15, startX = -((Math.min(cols,state.designer.placed.length)-1)*spacing)/2;
-  state.designer.placed.forEach((item,idx)=>{
-    const p = findProduct(item.productId);
-    const [dx,dy,dz] = p.dims;
-    const geo = new THREE.BoxGeometry(dx,dy,dz);
-    const mat = new THREE.MeshStandardMaterial({color:p.color});
-    const mesh = new THREE.Mesh(geo,mat);
-    const col = idx % cols, row = Math.floor(idx/cols);
-    mesh.position.set(startX + col*spacing, dy/2, -1 + row*1.2);
-    three.itemsGroup.add(mesh);
+function buildSwatchRow(el, pool, getCur, onPick){
+  el.textContent = '';
+  Object.keys(pool).forEach(variant=>{
+    const b = document.createElement('button');
+    b.className = 'sw' + (variant === getCur() ? ' on' : '');
+    b.style.background = '#' + pool[variant].toString(16).padStart(6,'0');
+    const s = document.createElement('span'); s.textContent = variant;
+    b.appendChild(s);
+    b.onclick = ()=>{ onPick(variant); [...el.children].forEach(c=>c.classList.toggle('on', c===b)); };
+    el.appendChild(b);
   });
 }
-function renderPlacedList(){
-  const listEl = document.getElementById('placed-list');
-  const countEl = document.getElementById('placed-count');
-  const weightEl = document.getElementById('placed-weight');
-  if(!listEl) return;
-  const placed = state.designer.placed;
-  countEl.textContent = placed.length;
-  const totalWeight = placed.reduce((s,i)=>s+findProduct(i.productId).weight,0);
-  weightEl.textContent = totalWeight + ' กก.';
-  listEl.innerHTML = placed.length===0
-    ? `<p class="text-sm text-[var(--ink-soft)] text-center py-6">แตะเฟอร์นิเจอร์ด้านบนเพื่อเริ่มจัดวาง</p>`
-    : placed.map(item=>{
-      const p = findProduct(item.productId);
-      return `<div class="card p-2.5 flex items-center justify-between">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0" style="background:var(--accent-soft)">🪑</div>
-          <div class="min-w-0"><div class="text-[13px] font-medium truncate">${p.name}</div><div class="text-[11px] text-[var(--ink-soft)]">${p.weight} กก. · ฿${fmt(p.price)}</div></div>
-        </div>
-        <button onclick="removeFromRoom('${item.uid}')" class="text-[var(--danger)] text-lg px-2">✕</button>
-      </div>`;
-    }).join('');
-}
-function confirmDesign(){
-  if(state.designer.placed.length===0){ toast('กรุณาวางเฟอร์นิเจอร์อย่างน้อย 1 ชิ้น','warn'); return; }
-  state.designer.placed.forEach(item=>{
-    const existing = state.cart.find(i=>i.productId===item.productId);
-    if(existing) existing.qty++; else state.cart.push({productId:item.productId, qty:1});
+buildSwatchRow(qs('#floorSw'), MATS.wood,  ()=>floorVariant, v=>{ floorVariant = v; buildRoom(); });
+buildSwatchRow(qs('#wallSw'),  MATS.stone, ()=>wallVariant,  v=>{ wallVariant  = v; buildRoom(); });
+
+{
+  const qb = qs('#qBtns');
+  Object.keys(QUALITY).forEach(k=>{
+    const cfg = QUALITY[k];
+    const b = document.createElement('button');
+    b.className = 'mcat' + (k === qualityKey ? ' on' : '');
+    b.textContent = cfg.label;
+    b.onclick = ()=>{
+      qualityKey = k;
+      renderer.shadowMap.enabled = cfg.shadows;
+      sunLight.castShadow = cfg.shadows;
+      if(sunLight.shadow.map){ sunLight.shadow.map.dispose(); sunLight.shadow.map = null; }
+      sunLight.shadow.mapSize.set(cfg.shadow, cfg.shadow);
+      scene.traverse(n=>{ if(n.isMesh && n.material) n.material.needsUpdate = true; });
+      onResize();
+      [...qb.children].forEach(c=>c.classList.toggle('on', c===b));
+      showToast('คุณภาพ: ' + cfg.label);
+    };
+    qb.appendChild(b);
   });
-  state.designer.placed = [];
-  toast('เพิ่มการออกแบบลงตะกร้าเรียบร้อย','success');
-  navigateTo('cart');
 }
 
-/* =========================================================
-   CUSTOMER: AI INTERIOR STYLIST
-========================================================= */
-function renderAIStylist(){
-  const s = state.aiStylist;
-  return `
-  <div class="px-4 pt-4 pb-6">
-    <div class="card p-4 mb-4">
-      <div class="font-display font-semibold text-base mb-1">AI Interior Stylist</div>
-      <p class="text-[12.5px] text-[var(--ink-soft)] mb-3">อัปโหลดรูปห้องโล่งของคุณ แล้วบอกสไตล์ที่ชอบ ระบบจะจับคู่ชุดเฟอร์นิเจอร์ที่เหมาะกับคุณจากร้านให้ทันที</p>
-      <label class="block border-2 border-dashed border-[var(--line)] rounded-2xl h-40 flex items-center justify-center text-center cursor-pointer overflow-hidden relative">
-        ${s.photo?`<img src="${s.photo}" class="absolute inset-0 w-full h-full object-cover">`:`
-        <div class="text-[var(--ink-soft)]"><div class="text-2xl mb-1">📷</div><div class="text-[12.5px]">แตะเพื่ออัปโหลดรูปห้อง</div></div>`}
-        <input type="file" accept="image/*" class="hidden" onchange="handleRoomUpload(event)">
-      </label>
-      <textarea id="ai-style-text" placeholder="เช่น อยากได้ห้องนั่งเล่นสไตล์มินิมอล โทนอบอุ่น" class="w-full mt-3 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm h-20">${s.styleText||''}</textarea>
-      <button onclick="runAIStylist()" class="w-full btn-accent font-semibold rounded-2xl py-3 mt-3">ให้ AI จัดชุดเฟอร์นิเจอร์ให้</button>
-      <p class="text-[10.5px] text-[var(--ink-soft)] mt-2">* จับคู่คำอธิบายของคุณกับสไตล์ที่คัดสรรไว้ล่วงหน้าในร้าน</p>
-    </div>
-    ${s.result ? renderAIResult(s.result) : ''}
-  </div>`;
-}
-function handleRoomUpload(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{ state.aiStylist.photo = reader.result; render(); };
-  reader.readAsDataURL(file);
-}
-function runAIStylist(){
-  const textEl = document.getElementById('ai-style-text');
-  const text = textEl ? textEl.value.trim() : '';
-  state.aiStylist.styleText = text;
-  if(!state.aiStylist.photo){ toast('กรุณาอัปโหลดรูปห้องก่อน','warn'); return; }
-  const preset = matchStylePreset(text || 'มินิมอล');
-  const items = preset.productIds.map(id=>findProduct(id));
-  const total = items.reduce((s,p)=>s+p.price,0);
-  const weight = items.reduce((s,p)=>s+p.weight,0);
-  state.aiStylist.result = {preset, items, total, weight};
-  toast(`แนะนำสไตล์ "${preset.name}" ให้แล้ว`,'success');
-  render();
-}
-function renderAIResult(result){
-  const positions = [{top:'62%',left:'20%'},{top:'55%',left:'72%'},{top:'32%',left:'46%'},{top:'78%',left:'50%'}];
-  return `
-  <div class="card p-4 mb-4">
-    <div class="font-display font-semibold text-sm mb-0.5">สไตล์ที่แนะนำ: ${result.preset.name}</div>
-    <p class="text-[12px] text-[var(--ink-soft)] mb-3">${result.preset.desc}</p>
-    <div class="relative rounded-2xl overflow-hidden h-48 mb-3">
-      <img src="${state.aiStylist.photo}" class="absolute inset-0 w-full h-full object-cover">
-      ${result.items.map((p,idx)=>`
-        <div class="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center" style="top:${positions[idx%4].top};left:${positions[idx%4].left};">
-          <div class="w-9 h-9 rounded-full bg-white shadow flex items-center justify-center text-base">🪑</div>
-          <span class="text-[9.5px] bg-black/60 text-white px-1.5 py-0.5 rounded-full mt-1 max-w-[90px] truncate">${p.name}</span>
-        </div>`).join('')}
-    </div>
-    <div class="space-y-1.5 mb-3">
-      ${result.items.map(p=>`<div class="flex justify-between text-sm"><span>${p.name}</span><span>฿${fmt(p.price)}</span></div>`).join('')}
-      <div class="h-px bg-[var(--line)] my-1.5"></div>
-      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">น้ำหนักรวม</span><span>${result.weight} กก.</span></div>
-      <div class="flex justify-between font-semibold"><span>ราคารวมทั้งเซต</span><span class="text-[var(--accent)]">฿${fmt(result.total)}</span></div>
-    </div>
-    <button onclick="addSetToCart()" class="w-full btn-primary font-semibold rounded-2xl py-3">เพิ่มทั้งเซตลงตะกร้า</button>
-  </div>`;
-}
-function addSetToCart(){
-  const result = state.aiStylist.result;
-  if(!result) return;
-  result.items.forEach(p=>{
-    const existing = state.cart.find(i=>i.productId===p.id);
-    if(existing) existing.qty++; else state.cart.push({productId:p.id, qty:1});
-  });
-  toast('เพิ่มทั้งเซตลงตะกร้าแล้ว','success');
-  navigateTo('cart');
-}
-
-/* =========================================================
-   AR: CAMERA-BASED FURNITURE PLACEMENT (WebXR + fallback)
-========================================================= */
-let arState = { productIds:[], renderer:null, scene:null, camera:null, group:null, raf:null, stream:null, xrSession:null, dragging:false, lastX:0, lastY:0, _onMove:null, _onUp:null };
-
-function openARView(productIds){
-  if(!productIds || productIds.length===0){ toast('กรุณาเลือกเฟอร์นิเจอร์ก่อนดู AR','warn'); return; }
-  arState.productIds = productIds;
-  const overlay = document.getElementById('ar-overlay');
-  overlay.classList.remove('hidden');
-  overlay.innerHTML = arOverlayHTML();
-  startAR();
-}
-function closeAR(){
-  stopAR();
-  const overlay = document.getElementById('ar-overlay');
-  overlay.classList.add('hidden');
-  overlay.innerHTML='';
-}
-function arOverlayHTML(){
-  const names = arState.productIds.map(id=>findProduct(id).name).join(', ');
-  return `
-  <div class="absolute inset-0 bg-black">
-    <video id="ar-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover"></video>
-    <canvas id="ar-canvas" class="absolute inset-0 w-full h-full"></canvas>
-    <div class="absolute top-0 left-0 right-0 flex items-center justify-between p-4">
-      <button onclick="closeAR()" class="w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center text-lg">✕</button>
-      <div id="ar-mode-badge" class="chip bg-black/50 text-white">กำลังเปิดกล้อง...</div>
-    </div>
-    <div class="absolute bottom-0 left-0 right-0 p-4 space-y-2.5">
-      <div class="bg-black/55 rounded-2xl p-3 text-white text-[12px] leading-relaxed" id="ar-hint">
-        กำลังแสดง: ${names} · ลากบนหน้าจอเพื่อขยับตำแหน่ง
-      </div>
-      <div class="flex items-center gap-3 bg-black/55 rounded-2xl p-3">
-        <span class="text-white text-xs w-14 shrink-0">หมุน</span>
-        <input id="ar-rotate" type="range" min="0" max="360" value="0" class="flex-1" oninput="arSetRotation(this.value)">
-      </div>
-      <div class="flex items-center gap-3 bg-black/55 rounded-2xl p-3">
-        <span class="text-white text-xs w-14 shrink-0">ขนาด</span>
-        <input id="ar-scale" type="range" min="50" max="150" value="100" class="flex-1" oninput="arSetScale(this.value)">
-      </div>
-    </div>
-  </div>`;
-}
-function buildARFurnitureGroup(){
-  const group = new THREE.Group();
-  const n = arState.productIds.length;
-  const cols = 3, spacing = 0.9;
-  const startX = -((Math.min(cols,n)-1)*spacing)/2;
-  arState.productIds.forEach((id,idx)=>{
-    const p = findProduct(id);
-    const [dx,dy,dz] = p.dims;
-    const geo = new THREE.BoxGeometry(dx,dy,dz);
-    const mat = new THREE.MeshStandardMaterial({color:p.color});
-    const mesh = new THREE.Mesh(geo,mat);
-    const col = idx % cols, row = Math.floor(idx/cols);
-    mesh.position.set(startX+col*spacing, dy/2, -row*0.9);
-    group.add(mesh);
-  });
-  return group;
-}
-async function startAR(){
-  if(navigator.xr){
-    try{
-      const supported = await navigator.xr.isSessionSupported('immersive-ar');
-      if(supported){ await startWebXR(); return; }
-    }catch(e){ /* fall through to camera fallback */ }
-  }
-  await startCameraFallback();
-}
-async function startWebXR(){
-  const badge = document.getElementById('ar-mode-badge');
-  if(badge) badge.textContent = 'โหมด AR เต็มรูปแบบ';
-  const video = document.getElementById('ar-video');
-  if(video) video.style.display = 'none';
-  const canvas = document.getElementById('ar-canvas');
-  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.xr.enabled = true;
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera();
-  const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
-  scene.add(light);
-
-  const group = buildARFurnitureGroup();
-  group.position.set(0,0,-1.4);
-  scene.add(group);
-  arState.group = group; arState.renderer = renderer; arState.scene = scene; arState.camera = camera;
-
+/* ══════════ 20. save / load ══════════ */
+const STORAGE_KEY = 'roomstudio.v2';
+qs('#bSave').onclick = ()=>{
   try{
-    const session = await navigator.xr.requestSession('immersive-ar', {optionalFeatures:['dom-overlay','local-floor'], domOverlay:{root:document.getElementById('ar-overlay')}});
-    renderer.xr.setReferenceSpaceType('local');
-    await renderer.xr.setSession(session);
-    arState.xrSession = session;
-    session.addEventListener('end', ()=>{ arState.xrSession=null; });
-    session.addEventListener('select', ()=>{
-      const dir = new THREE.Vector3(0,0,-1.4).applyQuaternion(camera.quaternion);
-      group.position.copy(camera.position).add(dir);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      roomW, roomD, roomH, floorVariant, wallVariant, items: takeSnapshot()
+    }));
+    showToast('บันทึกลงเครื่องแล้ว');
+  }catch(err){ showToast('บันทึกไม่สำเร็จ'); }
+};
+qs('#bLoad').onclick = ()=>{
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw){ showToast('ยังไม่มีไฟล์ที่บันทึก'); return; }
+  try{
+    const d = JSON.parse(raw);
+    roomW = d.roomW; roomD = d.roomD; roomH = d.roomH;
+    floorVariant = d.floorVariant; wallVariant = d.wallVariant;
+    qs('#rW').value = roomW; qs('#orW').textContent = roomW.toFixed(1);
+    qs('#rD').value = roomD; qs('#orD').textContent = roomD.toFixed(1);
+    qs('#rH').value = roomH; qs('#orH').textContent = roomH.toFixed(2);
+    buildSwatchRow(qs('#floorSw'), MATS.wood,  ()=>floorVariant, v=>{ floorVariant = v; buildRoom(); });
+    buildSwatchRow(qs('#wallSw'),  MATS.stone, ()=>wallVariant,  v=>{ wallVariant  = v; buildRoom(); });
+    buildRoom();
+    restoreSnapshot(d.items || []);
+    undoStack.length = 0; pushUndo();
+    showToast('เปิดไฟล์แล้ว');
+  }catch(err){ showToast('ไฟล์เสียหาย'); }
+};
+qs('#bClear').onclick = ()=>{
+  items.slice().forEach(removeItem);
+  showToast('ล้างห้องแล้ว');
+};
+
+/* ══════════ 21. loop ══════════ */
+let frameCount = 0, fpsTime = performance.now();
+const fpsEl = qs('#fps');
+
+buildRoom();
+setSunTime(14);
+applyView('3d');
+setSheetHeight(96, true);
+onResize();
+pushUndo();
+
+renderer.setAnimationLoop(()=>{
+  const now = performance.now();
+  if(now - fpsTime > 1000){
+    fpsEl.textContent = frameCount + ' fps · ' + items.length + ' ชิ้น · ' + QUALITY[qualityKey].label;
+    frameCount = 0; fpsTime = now;
+  }
+  if(!needsRender) return;          // FIX D1: วาดเฉพาะตอนมีการเปลี่ยนแปลง
+  needsRender = false;
+  frameCount++;
+
+  camera.position.set(
+    orbitTarget.x + orbit.r * Math.sin(orbit.phi) * Math.sin(orbit.theta),
+    orbitTarget.y + orbit.r * Math.cos(orbit.phi),
+    orbitTarget.z + orbit.r * Math.sin(orbit.phi) * Math.cos(orbit.theta)
+  );
+  camera.lookAt(orbitTarget);
+  sunLight.target.position.set(0,0,0);
+  sunLight.target.updateMatrixWorld();
+  updateWallVisibility();
+  renderer.render(scene, camera);
+});
+
+window.__ROOM_OK__ = true;
+showToast('แตะแคตตาล็อกด้านล่างเพื่อเริ่มจัดห้อง');
+
+/* ═══════════════════════════════════════════════════════════════════
+   22. SHOP — ตัวเรนเดอร์ภาพสินค้าจากโมเดล 3D จริง (offline 100%)
+   ═══════════════════════════════════════════════════════════════════ */
+const THUMB = 320;
+const thumbScene = new THREE.Scene();
+thumbScene.background = new THREE.Color(0x20242e);
+thumbScene.environment = scene.environment;
+thumbScene.add(new THREE.AmbientLight(0xffffff, 0.5));
+{
+  const k = new THREE.DirectionalLight(0xffffff, 1.25); k.position.set(2.4, 3.4, 2.6);
+  const f = new THREE.DirectionalLight(0xbcd4ff, 0.42); f.position.set(-2.6, 1.6, -2.2);
+  const r = new THREE.DirectionalLight(0xffe6c0, 0.3);  r.position.set(0, 1.2, -3);
+  thumbScene.add(k, f, r);
+}
+const thumbCam = new THREE.PerspectiveCamera(34, 1, 0.02, 60);
+const thumbRT = new THREE.WebGLRenderTarget(THUMB, THUMB, {
+  minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true
+});
+thumbRT.texture.colorSpace = THREE.SRGBColorSpace;
+const thumbPixels = new Uint8Array(THUMB * THUMB * 4);
+const thumb2D = document.createElement('canvas');
+thumb2D.width = thumb2D.height = THUMB;
+const thumbCtx = thumb2D.getContext('2d');
+const thumbCache = new Map();
+
+function shRenderThumb(kind, matType, matVar, angle){
+  const key = kind + '|' + matType + '|' + matVar + '|' + (angle || 0);
+  if(thumbCache.has(key)) return thumbCache.get(key);
+  const entry = CATALOG[kind];
+  if(!entry) return '';
+
+  const obj = entry.build();
+  if(matType){
+    obj.traverse(n=>{
+      if(n.isMesh && n.userData && n.userData.t && n.userData.t !== 'glass'){
+        n.material = getMat(matType, matVar, n.userData.tier || 1);
+      }
     });
-    renderer.setAnimationLoop(()=>{ renderer.render(scene, camera); });
-    const hint = document.getElementById('ar-hint');
-    if(hint) hint.textContent += ' · แตะหน้าจอเพื่อวางเฟอร์นิเจอร์ตรงหน้าคุณ';
-  }catch(e){
-    await startCameraFallback();
   }
-}
-async function startCameraFallback(){
-  const badge = document.getElementById('ar-mode-badge');
-  if(badge) badge.textContent = 'โหมดกล้อง (พรีวิว)';
-  const video = document.getElementById('ar-video');
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false});
-    video.srcObject = stream;
-    arState.stream = stream;
-  }catch(e){
-    const hint = document.getElementById('ar-hint');
-    if(hint) hint.textContent = 'ไม่สามารถเข้าถึงกล้องได้ (ต้องเปิดผ่าน HTTPS หรือ localhost และอนุญาตสิทธิ์กล้อง) — แสดงพื้นหลังจำลองแทน';
-    if(video) video.style.display='none';
-  }
-  const canvas = document.getElementById('ar-canvas');
-  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
-  const w = canvas.clientWidth || 400, h = canvas.clientHeight || 700;
-  renderer.setSize(w,h);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(50, w/h, 0.1, 50);
-  camera.position.set(0,1.2,3);
-  camera.lookAt(0,0.5,0);
-  const light = new THREE.HemisphereLight(0xffffff,0x444444,1.3);
-  scene.add(light);
-  const group = buildARFurnitureGroup();
-  group.position.set(0,0,0);
-  scene.add(group);
-  arState.group = group; arState.renderer = renderer; arState.scene = scene; arState.camera = camera;
+  thumbScene.add(obj);
+  obj.updateMatrixWorld(true);
 
-  const onDown = (x,y)=>{ arState.dragging=true; arState.lastX=x; arState.lastY=y; };
-  const onMoveFn = (x,y)=>{
-    if(!arState.dragging) return;
-    const dx=(x-arState.lastX)/w, dy=(y-arState.lastY)/h;
-    group.position.x += dx*4;
-    group.position.z += dy*4;
-    arState.lastX=x; arState.lastY=y;
+  const box = new THREE.Box3().setFromObject(obj);
+  const size = box.getSize(new THREE.Vector3());
+  const ctr  = box.getCenter(new THREE.Vector3());
+  const radius = Math.max(size.x, size.y, size.z) * 0.72 + 0.12;
+  const dist = radius / Math.sin(THREE.MathUtils.degToRad(thumbCam.fov) / 2) * 1.08;
+  const th = (angle || 0) * 0.9 + Math.PI * 0.26;
+  const ph = 1.06 - (angle === 2 ? 0.42 : 0);
+  thumbCam.position.set(
+    ctr.x + dist * Math.sin(ph) * Math.sin(th),
+    ctr.y + dist * Math.cos(ph),
+    ctr.z + dist * Math.sin(ph) * Math.cos(th)
+  );
+  thumbCam.lookAt(ctr);
+  thumbCam.updateProjectionMatrix();
+
+  const prevTarget = renderer.getRenderTarget();
+  renderer.setRenderTarget(thumbRT);
+  renderer.clear();
+  renderer.render(thumbScene, thumbCam);
+  renderer.readRenderTargetPixels(thumbRT, 0, 0, THUMB, THUMB, thumbPixels);
+  renderer.setRenderTarget(prevTarget);
+
+  const img = thumbCtx.createImageData(THUMB, THUMB);
+  for(let y = 0; y < THUMB; y++){
+    const src = (THUMB - 1 - y) * THUMB * 4, dst = y * THUMB * 4;
+    img.data.set(thumbPixels.subarray(src, src + THUMB * 4), dst);
+  }
+  thumbCtx.putImageData(img, 0, 0);
+  const url = thumb2D.toDataURL('image/png');
+
+  thumbScene.remove(obj);
+  obj.traverse(n=>{ if(n.isMesh && n.geometry) n.geometry.dispose(); });
+  thumbCache.set(key, url);
+  invalidate();
+  return url;
+}
+
+/* คิวสร้างรูปแบบทยอย — ไม่ให้เฟรมกระตุกตอนเปิดหน้าร้าน */
+const shThumbQueue = [];
+let shQueueRunning = false;
+function shQueueThumb(imgEl, kind, mt, mv, angle){
+  shThumbQueue.push({imgEl, kind, mt, mv, angle: angle || 0});
+  if(shQueueRunning) return;
+  shQueueRunning = true;
+  const step = ()=>{
+    let budget = 2;
+    while(budget-- > 0 && shThumbQueue.length){
+      const j = shThumbQueue.shift();
+      if(!j.imgEl.isConnected) continue;
+      j.imgEl.src = shRenderThumb(j.kind, j.mt, j.mv, j.angle);
+    }
+    if(shThumbQueue.length) requestAnimationFrame(step);
+    else shQueueRunning = false;
   };
-  const onUpFn = ()=>{ arState.dragging=false; };
-  canvas.addEventListener('mousedown', e=>onDown(e.clientX,e.clientY));
-  window.addEventListener('mousemove', e=>onMoveFn(e.clientX,e.clientY));
-  window.addEventListener('mouseup', onUpFn);
-  canvas.addEventListener('touchstart', e=>{const t=e.touches[0]; onDown(t.clientX,t.clientY);}, {passive:true});
-  canvas.addEventListener('touchmove', e=>{const t=e.touches[0]; onMoveFn(t.clientX,t.clientY);}, {passive:true});
-  canvas.addEventListener('touchend', onUpFn);
-  arState._onMove = onMoveFn; arState._onUp = onUpFn;
-
-  function loop(){ arState.raf = requestAnimationFrame(loop); renderer.render(scene,camera); }
-  loop();
-}
-function arSetRotation(val){ if(arState.group) arState.group.rotation.y = (val/180)*Math.PI; }
-function arSetScale(val){ if(arState.group){ const s = val/100; arState.group.scale.set(s,s,s); } }
-function stopAR(){
-  if(arState.raf) cancelAnimationFrame(arState.raf);
-  if(arState.stream) arState.stream.getTracks().forEach(t=>t.stop());
-  if(arState.xrSession){ try{ arState.xrSession.end(); }catch(e){} }
-  if(arState.renderer){ try{ arState.renderer.setAnimationLoop(null); }catch(e){} }
-  if(arState._onMove) window.removeEventListener('mousemove', arState._onMove);
-  if(arState._onUp) window.removeEventListener('mouseup', arState._onUp);
-  arState = { productIds:[], renderer:null, scene:null, camera:null, group:null, raf:null, stream:null, xrSession:null, dragging:false, lastX:0, lastY:0, _onMove:null, _onUp:null };
+  requestAnimationFrame(step);
 }
 
-/* =========================================================
-   CUSTOMER: CART / CHECKOUT
-========================================================= */
-function renderCart(){
-  const customer = findCustomer(state.customerIdView);
-  const items = state.cart.map(i=>({...i, product:findProduct(i.productId)}));
-  const totalWeight = items.reduce((s,i)=>s+i.product.weight*i.qty,0);
-  const productTotal = items.reduce((s,i)=>s+i.product.price*i.qty,0);
-  const shipping = calcShipping(totalWeight, customer.distance);
+/* ═══════════ 23. SHOP — data layer + localStorage ═══════════ */
+const SHOP_KEY = 'roomstudio.shop.v1';
+const SH_CATS = {
+  all:'ทั้งหมด', seat:'โซฟา & ที่นั่ง', table:'โต๊ะ', bedroom:'ห้องนอน',
+  storage:'จัดเก็บ', light:'แสงสว่าง', deco:'ของตกแต่ง', appliance:'เครื่องใช้ไฟฟ้า', ware:'อุปกรณ์คลัง'
+};
+const SH_SHIP_FREE = 20000, SH_SHIP_FEE = 590, SH_VAT = 7;
+const SH_COUPONS = {
+  'WELCOME10': {type:'pct',  val:10,  min:0,     label:'ลด 10%'},
+  'SAVE500'  : {type:'baht', val:500, min:5000,  label:'ลด 500 บาท (ขั้นต่ำ 5,000)'},
+  'FREESHIP' : {type:'ship', val:0,   min:3000,  label:'ส่งฟรี (ขั้นต่ำ 3,000)'}
+};
 
-  return `
-  <div class="px-4 pt-4 pb-6">
-    <div class="card p-3 mb-4 flex items-center justify-between">
-      <div>
-        <div class="text-[11px] text-[var(--ink-soft)]">จัดส่งในนามลูกค้า</div>
-        <div class="font-semibold text-sm">${customer.name} · ${customer.distance} กม.</div>
-      </div>
-      <select onchange="state.customerIdView=this.value;render()" class="text-sm border border-[var(--line)] rounded-lg px-2 py-1.5 bg-white">
-        ${db.customers.map(c=>`<option value="${c.id}" ${c.id===state.customerIdView?'selected':''}>${c.name}</option>`).join('')}
-      </select>
-    </div>
-
-    ${items.length===0?`<div class="text-center py-16 text-[var(--ink-soft)]"><div class="text-4xl mb-2">🛒</div>ตะกร้าว่างอยู่</div>`:`
-    <div class="space-y-2.5 mb-4">
-      ${items.map(i=>`
-        <div class="card p-3 flex items-center gap-3">
-          <div class="w-12 h-12 rounded-lg flex items-center justify-center text-xl shrink-0" style="background:var(--accent-soft)">🪑</div>
-          <div class="flex-1 min-w-0">
-            <div class="text-[13px] font-medium truncate">${i.product.name}</div>
-            <div class="text-[12px] text-[var(--accent)] font-semibold">฿${fmt(i.product.price)}</div>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="changeQty('${i.productId}',-1)" class="w-7 h-7 rounded-full bg-[var(--line)] font-semibold">−</button>
-            <span class="w-5 text-center text-sm font-medium">${i.qty}</span>
-            <button onclick="changeQty('${i.productId}',1)" class="w-7 h-7 rounded-full bg-[var(--line)] font-semibold">＋</button>
-          </div>
-        </div>`).join('')}
-    </div>
-
-    <div class="card p-4 space-y-1.5 mb-4">
-      <div class="font-display font-semibold text-sm mb-1.5">สรุปการคำนวณอัตโนมัติ</div>
-      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">ยอดสินค้า</span><span>฿${fmt(productTotal)}</span></div>
-      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">น้ำหนักรวม</span><span>${totalWeight} กก.</span></div>
-      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">ระยะทางจัดส่ง</span><span>${customer.distance} กม.</span></div>
-      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">ค่าขนส่ง (อัตโนมัติ)</span><span>฿${fmt(shipping)}</span></div>
-      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">คาร์บอนฟุตพริ้นท์โดยประมาณ</span><span>${Math.round(customer.distance*CO2_FACTOR_KG_PER_KM*10)/10} กก. CO₂</span></div>
-      <div class="h-px bg-[var(--line)] my-2"></div>
-      <div class="flex justify-between font-semibold"><span>ยอดชำระทั้งหมด</span><span class="text-[var(--accent)]">฿${fmt(productTotal+shipping)}</span></div>
-    </div>
-    <button onclick="checkout()" class="w-full btn-accent font-semibold rounded-2xl py-3.5">ยืนยันคำสั่งซื้อและชำระเงิน</button>
-    `}
-  </div>`;
+function shSeedProducts(){
+  const P = (id,sku,kind,name,cat,price,old,stock,rating,sold,mt,mv,desc,dim,tag)=>
+    ({id,sku,kind,name,cat,price,old,stock,rating,sold,mt,mv,desc,dim,tag,created:Date.now()-Math.random()*60*86400000});
+  return [
+    P('p01','SF-3001','sofa','โซฟาผ้า 3 ที่นั่ง รุ่นนอร์ดิก','seat',18900,23900,12,4.8,214,'fabric','denim',
+      'โครงไม้ยางพาราอบแห้ง เบาะฟองน้ำอัดความหนาแน่นสูง หุ้มผ้าโพลีเอสเตอร์กันคราบ ถอดซักได้','190 × 85 × 78 ซม.','sale'),
+    P('p02','SF-3002','sofa','โซฟาผ้า 3 ที่นั่ง รุ่นชาร์โคล','seat',19900,0,8,4.6,96,'fabric','charcoal',
+      'โทนเทาเข้มเก็บฝุ่นยาก เหมาะกับห้องสไตล์มินิมอล ขาไม้สีเข้มรับน้ำหนักได้ 320 กก.','190 × 85 × 78 ซม.','hot'),
+    P('p03','CH-2101','chair','เก้าอี้ทานข้าวเบาะผ้า','seat',2490,2990,64,4.5,530,'fabric','charcoal',
+      'พนักพิงโค้งรับแผ่นหลัง ขาไม้แข็งแรง มีจุกยางกันลื่นที่ปลายขา','45 × 45 × 86 ซม.','sale'),
+    P('p04','CH-2102','chair','เก้าอี้ทำงานเบาะผ้าเดนิม','seat',2890,0,41,4.3,187,'fabric','denim',
+      'เบาะหนา 7 ซม. นั่งสบายต่อเนื่องได้นาน เหมาะกับโต๊ะสูงมาตรฐาน 74–76 ซม.','45 × 45 × 86 ซม.',''),
+    P('p05','TB-4001','table','โต๊ะทานอาหารไม้โอ๊ค 140 ซม.','table',12900,15900,15,4.9,142,'wood','oak',
+      'หน้าท็อปไม้โอ๊คลามิเนตกันรอย ขาเหล็กพ่นสีดำด้าน รองรับน้ำหนัก 90 กก.','140 × 80 × 76 ซม.','sale'),
+    P('p06','TB-4002','table','โต๊ะทำงานไม้วอลนัท','table',9900,0,22,4.4,88,'wood','walnut',
+      'โทนไม้วอลนัทเข้ม เหมาะกับห้องทำงาน มีช่องร้อยสายไฟใต้ท็อป','140 × 80 × 76 ซม.','new'),
+    P('p07','BD-5001','bed','เตียงนอน 5 ฟุต โครงไม้สน','bedroom',15900,18900,9,4.7,121,'wood','pine',
+      'โครงไม้สนนิวซีแลนด์ พร้อมหัวเตียงบุนวม และฐานระแนงระบายอากาศ','150 × 200 × 90 ซม.','sale'),
+    P('p08','WD-6001','wardrobe','ตู้เสื้อผ้า 2 บานไม้วอลนัท','storage',13900,0,11,4.5,74,'wood','walnut',
+      'ราวแขวนสเตนเลสรับน้ำหนัก 25 กก. มีชั้นวางด้านบน มือจับโลหะสีทอง','110 × 58 × 200 ซม.',''),
+    P('p09','SH-6101','shelf','ชั้นวางหนังสือ 5 ชั้น','storage',6490,7490,27,4.4,163,'wood','walnut',
+      'แผ่นชั้นหนา 2.5 ซม. รับน้ำหนักชั้นละ 20 กก. มีอุปกรณ์ยึดผนังกันล้ม','95 × 34 × 180 ซม.','sale'),
+    P('p10','TV-7001','tv','ชุดวางทีวี 130 ซม. พร้อมจอ','appliance',7990,0,18,4.2,59,'metal','black',
+      'ตู้วางทีวีไม้สีเข้ม พร้อมขาตั้งจอเหล็ก รองรับจอสูงสุด 55 นิ้ว','130 × 40 × 95 ซม.','new'),
+    P('p11','LT-8001','lamp','โคมไฟตั้งพื้นขาเหล็ก','light',2290,2890,53,4.6,302,'metal','black',
+      'ฐานถ่วงน้ำหนักกันล้ม โป๊ะผ้าไอวอรี่กระจายแสงนุ่ม ใช้หลอด E27 สูงสุด 15W','ฐาน Ø40 × สูง 150 ซม.','sale'),
+    P('p12','RG-9001','rug','พรมทอ 200 × 140 ซม. สีโอลีฟ','deco',3490,0,34,4.3,211,'fabric','olive',
+      'ขนสั้นทำความสะอาดง่าย รองหลังกันลื่น เหมาะวางใต้โต๊ะกลางหรือปลายเตียง','200 × 140 × 1.8 ซม.',''),
+    P('p13','PL-9101','plant','ต้นไม้ประดับพร้อมกระถางหิน','deco',1590,1990,72,4.1,418,'stone','sand',
+      'ต้นไม้เทียมเกรดพรีเมียม ไม่ต้องรดน้ำ กระถางหินทรายน้ำหนักถ่วงกันล้ม','Ø48 × สูง 145 ซม.','sale'),
+    P('p14','FR-7101','fridge','ตู้เย็น 2 ประตู 14 คิว','appliance',18900,21900,6,4.7,67,'metal','steel',
+      'ระบบ No Frost เบอร์ 5 ประหยัดไฟ ผิวสเตนเลสกันรอยนิ้วมือ','72 × 70 × 180 ซม.','sale'),
+    P('p15','MR-9201','mirror','กระจกยืนกรอบทอง','deco',4290,0,19,4.5,138,'metal','gold',
+      'กระจกเงาหนา 5 มม. กรอบโลหะชุบสีทอง ติดผนังหรือตั้งพิงได้','70 × 140 ซม.','new'),
+    P('p16','VS-9301','vase','แจกันหินอ่อนสีโรส','deco',1290,0,88,4.2,256,'marble','rose',
+      'หินอ่อนสังเคราะห์ผิวขัดเงา น้ำหนัก 2.1 กก. ตั้งโต๊ะหรือชั้นวางได้','Ø20 × สูง 36 ซม.',''),
+    P('p17','PT-1101','pallet','พาเลทไม้พร้อมกล่องสินค้า','ware',1890,0,120,4.0,96,'wood','pine',
+      'พาเลทไม้สนมาตรฐาน 1200×800 มม. รับน้ำหนักแบบวางนิ่ง 1,500 กก.','120 × 80 × 74 ซม.',''),
+    P('p18','RK-1201','rack','ชั้นแร็คเหล็กเก็บของ 3 ชั้น','ware',8900,10900,25,4.6,112,'metal','steel',
+      'เหล็กชุบกัลวาไนซ์ รับน้ำหนักชั้นละ 300 กก. ถอดประกอบไม่ต้องใช้น็อต','180 × 80 × 220 ซม.','sale')
+  ];
 }
-function changeQty(productId, delta){
-  const item = state.cart.find(i=>i.productId===productId);
-  item.qty += delta;
-  if(item.qty<=0) state.cart = state.cart.filter(i=>i.productId!==productId);
-  render();
+function shSeed(){
+  return {ver:1, products:shSeedProducts(), cart:[], orders:[], favs:[],
+          profile:{name:'', phone:'', addr:'', pay:'transfer'}, coupon:null};
 }
-function checkout(){
-  if(state.cart.length===0) return;
-  const order = buildOrder(state.customerIdView, state.cart.map(i=>({...i})));
-  state.cart = [];
-  toast(`สั่งซื้อสำเร็จ! หมายเลขออเดอร์ ${order.id}`,'success');
-  navigateTo('orders');
+let SH;
+try{
+  const raw = localStorage.getItem(SHOP_KEY);
+  SH = raw ? JSON.parse(raw) : null;
+  if(!SH || SH.ver !== 1 || !Array.isArray(SH.products)) SH = shSeed();
+}catch(e){ SH = shSeed(); }
+function shSave(){
+  try{ localStorage.setItem(SHOP_KEY, JSON.stringify(SH)); }
+  catch(e){ showToast('พื้นที่จัดเก็บเต็ม'); }
 }
+const shEsc = s => String(s==null?'':s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const shNf = (n,d)=>Number(n||0).toLocaleString('th-TH',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});
+const shB = n => '฿' + shNf(n, 0);
+const shB2 = n => '฿' + shNf(n, 2);
+const shUid = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const shDT = t => new Date(t).toLocaleString('th-TH',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+const shDay = t => new Date(t).toISOString().slice(0,10);
+const shStars = r => '★'.repeat(Math.round(r)) + '☆'.repeat(5-Math.round(r));
+const shProd = id => SH.products.find(p=>p.id===id);
 
-/* =========================================================
-   CUSTOMER: ORDERS + TRACKING
-========================================================= */
-function renderCustomerOrders(){
-  const orders = db.orders.filter(o=>o.customerId===state.customerIdView);
-  return `
-  <div class="px-4 pt-4 pb-6">
-    <div class="card p-3 mb-4 flex items-center justify-between">
-      <div class="text-[11px] text-[var(--ink-soft)]">แสดงคำสั่งซื้อของ</div>
-      <select onchange="state.customerIdView=this.value;render()" class="text-sm border border-[var(--line)] rounded-lg px-2 py-1.5 bg-white">
-        ${db.customers.map(c=>`<option value="${c.id}" ${c.id===state.customerIdView?'selected':''}>${c.name}</option>`).join('')}
-      </select>
-    </div>
-    ${orders.length===0?`<div class="text-center py-16 text-[var(--ink-soft)]">ยังไม่มีคำสั่งซื้อ</div>`:
-    orders.map(o=>orderCard(o,true)).join('')}
-  </div>`;
-}
-function orderCard(o, showDetail){
-  const meta = STATUS_META[o.status];
-  return `
-  <button onclick="${showDetail?`openOrderDetail('${o.id}')`:''}" class="card w-full text-left p-3.5 mb-2.5 block">
-    <div class="flex items-center justify-between mb-1.5">
-      <span class="font-semibold text-sm">#${o.id}</span>
-      <span class="chip" style="background:${meta.soft};color:${meta.color}">${meta.label}</span>
-    </div>
-    <div class="text-[12.5px] text-[var(--ink-soft)]">${o.items.length} รายการ · น้ำหนัก ${o.totalWeight} กก. · ฿${fmt(o.grandTotal)}</div>
-  </button>`;
-}
-function openOrderDetail(orderId){
-  const o = db.orders.find(x=>x.id===orderId);
-  const customer = findCustomer(o.customerId);
-  const steps = ['new','pending','in_transit', o.status==='failed'?'failed':'delivered'];
-  openModal(`
-    <h3 class="font-display font-semibold text-lg mb-0.5">คำสั่งซื้อ #${o.id}</h3>
-    <p class="text-sm text-[var(--ink-soft)] mb-4">${customer.name} · ${customer.address}</p>
-    <div class="space-y-4 mb-5">
-      ${steps.map((s,idx)=>{
-        const meta = STATUS_META[s];
-        const done = o.timeline.find(t=>t.status===s);
-        const isLast = idx===steps.length-1;
-        return `<div class="relative pl-8 ${isLast?'':'pb-1'}">
-          ${!isLast?'<div class="stepper-line"></div>':''}
-          <div class="absolute left-0 top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-xs" style="background:${done?meta.color:'var(--line)'};color:${done?'#fff':'var(--ink-soft)'}">${idx+1}</div>
-          <div class="text-sm font-medium" style="color:${done?'var(--ink)':'var(--ink-soft)'}">${meta.label}</div>
-          <div class="text-[11px] text-[var(--ink-soft)]">${done?done.time:'รอดำเนินการ'}</div>
-        </div>`;
-      }).join('')}
-    </div>
-    <div class="card p-3.5 space-y-1.5">
-      ${o.items.map(i=>`<div class="flex justify-between text-sm"><span>${findProduct(i.productId).name} × ${i.qty}</span><span>฿${fmt(findProduct(i.productId).price*i.qty)}</span></div>`).join('')}
-      <div class="h-px bg-[var(--line)] my-1.5"></div>
-      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">ค่าขนส่ง</span><span>฿${fmt(o.shippingCost)}</span></div>
-      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">คาร์บอนฟุตพริ้นท์การจัดส่ง</span><span>${o.co2} กก. CO₂</span></div>
-      <div class="flex justify-between font-semibold"><span>รวมทั้งหมด</span><span class="text-[var(--accent)]">฿${fmt(o.grandTotal)}</span></div>
-    </div>
-  `);
-}
-
-/* =========================================================
-   ADMIN: DASHBOARD
-========================================================= */
-function renderDashboard(){
-  const delivered = db.orders.filter(o=>o.status==='delivered');
-  const failed = db.orders.filter(o=>o.status==='failed');
-  const revenue = delivered.reduce((s,o)=>s+o.grandTotal,0);
-  const successRate = (delivered.length+failed.length)===0 ? 0 : Math.round(delivered.length/(delivered.length+failed.length)*100);
-  const lowStock = db.products.filter(p=>p.stock<=3);
-  const chart = [4,6,3,7,5,8, delivered.length];
-  const maxC = Math.max(...chart,1);
-  const co2Saved = computeFleetCO2Savings();
-  const avgRecycled = Math.round(db.products.reduce((s,p)=>s+(p.recycledPct||0),0)/db.products.length);
-
-  return `
-  <div class="px-4 pt-4 pb-6">
-    ${lowStock.length? `<div class="rounded-2xl p-3 mb-4 flex items-start gap-2.5" style="background:var(--danger-soft)">
-      <span class="text-lg">⚠️</span>
-      <div class="text-[13px]" style="color:var(--danger)"><b>สต็อกใกล้หมด:</b> ${lowStock.map(p=>p.name).join(', ')}</div>
-    </div>`:''}
-
-    <div class="grid grid-cols-2 gap-3 mb-4">
-      <div class="card p-3.5">
-        <div class="text-[11.5px] text-[var(--ink-soft)] mb-1">ส่งสำเร็จวันนี้</div>
-        <div class="font-display font-semibold text-2xl">${delivered.length}</div>
-      </div>
-      <div class="card p-3.5">
-        <div class="text-[11.5px] text-[var(--ink-soft)] mb-1">อัตราส่งสำเร็จ</div>
-        <div class="font-display font-semibold text-2xl" style="color:var(--success)">${successRate}%</div>
-      </div>
-      <div class="card p-3.5 col-span-2">
-        <div class="text-[11.5px] text-[var(--ink-soft)] mb-1">รายได้รวม (ออเดอร์ที่จัดส่งสำเร็จ)</div>
-        <div class="font-display font-semibold text-2xl" style="color:var(--accent)">฿${fmt(revenue)}</div>
-      </div>
-    </div>
-
-    <div class="card p-4 mb-4">
-      <div class="font-display font-semibold text-sm mb-3">ยอดจัดส่งย้อนหลัง 7 วัน</div>
-      <div class="bar-wrap">
-        ${chart.map((v,i)=>`<div class="bar ${i===chart.length-1?'today':''}" style="height:${(v/maxC*100)}%"></div>`).join('')}
-      </div>
-      <div class="flex justify-between text-[10.5px] text-[var(--ink-soft)] mt-1.5">
-        <span>-6 วัน</span><span>วันนี้</span>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-2 gap-3 mb-4">
-      <div class="card p-3.5" style="background:var(--success-soft)">
-        <div class="text-[11px]" style="color:var(--success)">CO₂ ประหยัดได้จากเส้นทางอัจฉริยะวันนี้</div>
-        <div class="font-display font-semibold text-xl mt-0.5" style="color:var(--success)">${co2Saved.toFixed(1)} กก.</div>
-      </div>
-      <div class="card p-3.5">
-        <div class="text-[11px] text-[var(--ink-soft)]">วัสดุรีไซเคิลเฉลี่ยของสินค้า</div>
-        <div class="font-display font-semibold text-xl mt-0.5">${avgRecycled}%</div>
-      </div>
-    </div>
-
-    <div class="font-display font-semibold text-sm mb-2">งานที่ต้องดำเนินการ</div>
-    ${db.orders.filter(o=>o.status==='new'||o.status==='pending').slice(0,3).map(o=>orderCard(o,false)).join('') || `<p class="text-sm text-[var(--ink-soft)]">ไม่มีงานค้าง</p>`}
-  </div>`;
-}
-
-/* =========================================================
-   ADMIN: PRODUCTS
-========================================================= */
-function renderProductsAdmin(){
-  return `
-  <div class="px-4 pt-4 pb-6">
-    <button onclick="openProductForm()" class="w-full btn-primary font-semibold rounded-2xl py-2.5 mb-4">＋ เพิ่มสินค้าใหม่</button>
-    <div class="space-y-2.5">
-    ${db.products.map(p=>`
-      <div class="card p-3 flex items-center gap-3">
-        <div class="w-11 h-11 rounded-lg flex items-center justify-center text-xl shrink-0" style="background:var(--accent-soft)">🪑</div>
-        <div class="flex-1 min-w-0">
-          <div class="text-[13px] font-medium truncate">${p.name}</div>
-          <div class="text-[11.5px] text-[var(--ink-soft)]">${p.category} · ${p.weight} กก. · ฿${fmt(p.price)}</div>
-          ${p.recycledPct?`<div class="text-[10px] mt-0.5" style="color:var(--success)">♻️ วัสดุรีไซเคิล ${p.recycledPct}%</div>`:''}
-        </div>
-        <div class="text-right shrink-0">
-          <div class="text-[12px] font-semibold ${p.stock<=3?'text-[var(--danger)]':''}">คงเหลือ ${p.stock}</div>
-          <button onclick="openProductForm('${p.id}')" class="text-[12px] text-[var(--primary)] font-medium mt-0.5">แก้ไข</button>
-        </div>
-      </div>`).join('')}
-    </div>
-  </div>`;
-}
-function openProductForm(productId){
-  const p = productId ? findProduct(productId) : null;
-  openModal(`
-    <h3 class="font-display font-semibold text-lg mb-4">${p?'แก้ไขสินค้า':'เพิ่มสินค้าใหม่'}</h3>
-    <div class="space-y-3">
-      <div><label class="text-[12px] text-[var(--ink-soft)]">ชื่อสินค้า</label>
-        <input id="f-name" value="${p?p.name:''}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
-      <div><label class="text-[12px] text-[var(--ink-soft)]">หมวดหมู่</label>
-        <input id="f-cat" value="${p?p.category:''}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="text-[12px] text-[var(--ink-soft)]">ราคา (บาท)</label>
-          <input id="f-price" type="number" value="${p?p.price:''}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
-        <div><label class="text-[12px] text-[var(--ink-soft)]">น้ำหนัก (กก.)</label>
-          <input id="f-weight" type="number" value="${p?p.weight:''}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
-      </div>
-      <div><label class="text-[12px] text-[var(--ink-soft)]">จำนวนคงเหลือ</label>
-        <input id="f-stock" type="number" value="${p?p.stock:''}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
-      <div><label class="text-[12px] text-[var(--ink-soft)]">% วัสดุรีไซเคิล</label>
-        <input id="f-recycled" type="number" min="0" max="100" value="${p?p.recycledPct:0}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
-      <div><label class="text-[12px] text-[var(--ink-soft)]">วัสดุ / คำอธิบายความยั่งยืน</label>
-        <input id="f-material" value="${p?(p.material||''):''}" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm"></div>
-    </div>
-    <div class="flex gap-2.5 mt-5">
-      ${p?`<button onclick="deleteProduct('${p.id}')" class="flex-1 rounded-2xl py-3 font-semibold" style="background:var(--danger-soft);color:var(--danger)">ลบสินค้า</button>`:''}
-      <button onclick="saveProduct('${p?p.id:''}')" class="flex-1 btn-primary rounded-2xl py-3 font-semibold">บันทึก</button>
-    </div>
-  `);
-}
-function saveProduct(productId){
-  const name = document.getElementById('f-name').value.trim();
-  const category = document.getElementById('f-cat').value.trim() || 'ทั่วไป';
-  const price = Number(document.getElementById('f-price').value)||0;
-  const weight = Number(document.getElementById('f-weight').value)||0;
-  const stock = Number(document.getElementById('f-stock').value)||0;
-  const recycledPct = Math.max(0, Math.min(100, Number(document.getElementById('f-recycled').value)||0));
-  const material = document.getElementById('f-material').value.trim();
-  if(!name){ toast('กรุณากรอกชื่อสินค้า','warn'); return; }
-  if(productId){
-    const p = findProduct(productId);
-    Object.assign(p,{name,category,price,weight,stock,recycledPct,material});
-    toast('บันทึกการแก้ไขแล้ว','success');
-  } else {
-    db.products.push({id:'P'+Date.now(), name, category, price, weight, stock, color:0x8B5E34, dims:[1,0.8,0.6], recycledPct, material});
-    toast('เพิ่มสินค้าใหม่แล้ว','success');
+/* ═══════════ 24. SHOP — การคำนวณราคา ═══════════ */
+function shCartCalc(){
+  let sub = 0, units = 0;
+  SH.cart.forEach(c=>{
+    const p = shProd(c.id); if(!p) return;
+    sub += p.price * c.qty; units += c.qty;
+  });
+  let disc = 0, shipFree = false;
+  const cp = SH.coupon && SH_COUPONS[SH.coupon];
+  if(cp && sub >= cp.min){
+    if(cp.type === 'pct')  disc = sub * cp.val / 100;
+    if(cp.type === 'baht') disc = cp.val;
+    if(cp.type === 'ship') shipFree = true;
   }
-  closeModal(); render();
+  const after = Math.max(0, sub - disc);
+  const ship = (after >= SH_SHIP_FREE || shipFree || after === 0) ? 0 : SH_SHIP_FEE;
+  const net = after + ship;
+  const vat = net * SH_VAT / 100;
+  return {sub, units, disc, ship, net, vat, total: net + vat, shipFree};
 }
-function deleteProduct(productId){
-  db.products = db.products.filter(p=>p.id!==productId);
-  closeModal(); render();
-  toast('ลบสินค้าแล้ว');
+function shCartCount(){ return SH.cart.reduce((s,c)=>s+c.qty, 0); }
+function shBadges(){
+  const c = shCartCount(), f = SH.favs.length;
+  const cb = qs('#shCartBadge'), fb = qs('#shFavBadge');
+  cb.hidden = !c; cb.textContent = c > 99 ? '99+' : c;
+  fb.hidden = !f; fb.textContent = f;
 }
-
-/* =========================================================
-   ADMIN: ORDERS
-========================================================= */
-function renderOrdersAdmin(){
-  const tabs = [['all','ทั้งหมด'],['new','ใหม่'],['pending','รอรับ'],['in_transit','กำลังส่ง'],['delivered','สำเร็จ'],['failed','ไม่สำเร็จ']];
-  const orders = db.orders.filter(o=> state.orderTab==='all' || o.status===state.orderTab);
-  return `
-  <div class="pt-4 pb-6">
-    <div class="flex gap-2 overflow-x-auto scrollbar-x px-4 pb-3">
-      ${tabs.map(([k,l])=>`<button onclick="state.orderTab='${k}';render()" class="shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium ${state.orderTab===k?'btn-primary':'bg-white border border-[var(--line)] text-[var(--ink-soft)]'}">${l}</button>`).join('')}
-    </div>
-    <div class="px-4">
-      ${orders.length===0?`<p class="text-sm text-[var(--ink-soft)] text-center py-10">ไม่มีคำสั่งซื้อในสถานะนี้</p>`:
-      orders.map(o=>adminOrderCard(o)).join('')}
-    </div>
-  </div>`;
+function shAddCart(id, qty){
+  const p = shProd(id); if(!p) return;
+  if(p.stock <= 0){ showToast('สินค้าหมดชั่วคราว'); return; }
+  const line = SH.cart.find(c=>c.id===id);
+  const want = (line ? line.qty : 0) + (qty||1);
+  if(want > p.stock){ showToast('สต็อกเหลือ ' + p.stock + ' ชิ้น'); return; }
+  if(line) line.qty = want; else SH.cart.push({id, qty: qty||1});
+  shSave(); shBadges(); showToast('เพิ่มลงตะกร้า · ' + p.name);
 }
-function adminOrderCard(o){
-  const meta = STATUS_META[o.status];
-  const customer = findCustomer(o.customerId);
-  return `
-  <button onclick="openAdminOrderDetail('${o.id}')" class="card w-full text-left p-3.5 mb-2.5 block">
-    <div class="flex items-center justify-between mb-1">
-      <span class="font-semibold text-sm">#${o.id}</span>
-      <span class="chip" style="background:${meta.soft};color:${meta.color}">${meta.label}</span>
-    </div>
-    <div class="text-[12.5px] text-[var(--ink-soft)]">${customer.name} · ${o.totalWeight} กก. · ฿${fmt(o.grandTotal)}</div>
-    ${o.driverId?`<div class="text-[11.5px] text-[var(--ink-soft)] mt-0.5">คนขับ: ${findDriver(o.driverId).name}</div>`:`<div class="text-[11.5px] text-[var(--warn)] mt-0.5 font-medium">ยังไม่มอบหมายคนขับ</div>`}
-  </button>`;
-}
-function openAdminOrderDetail(orderId){
-  const o = db.orders.find(x=>x.id===orderId);
-  const customer = findCustomer(o.customerId);
-  const availableDrivers = db.drivers;
-  const tripCost = calcTripCost(o.distance);
-  openModal(`
-    <h3 class="font-display font-semibold text-lg mb-0.5">คำสั่งซื้อ #${o.id}</h3>
-    <p class="text-sm text-[var(--ink-soft)] mb-4">${customer.name} · ${customer.address} (${o.distance} กม.)</p>
-
-    <div class="card p-3.5 space-y-1.5 mb-4">
-      ${o.items.map(i=>`<div class="flex justify-between text-sm"><span>${findProduct(i.productId).name} × ${i.qty}</span><span>฿${fmt(findProduct(i.productId).price*i.qty)}</span></div>`).join('')}
-      <div class="h-px bg-[var(--line)] my-1.5"></div>
-      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">น้ำหนักรวม</span><span>${o.totalWeight} กก.</span></div>
-      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">ค่าขนส่งเรียกเก็บลูกค้า</span><span>฿${fmt(o.shippingCost)}</span></div>
-      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">ต้นทุนต่อเที่ยว (โดยประมาณ)</span><span style="color:var(--accent)">฿${fmt(tripCost)}</span></div>
-      <div class="flex justify-between text-sm"><span class="text-[var(--ink-soft)]">คาร์บอนฟุตพริ้นท์การจัดส่ง</span><span>${o.co2} กก. CO₂</span></div>
-      <div class="flex justify-between font-semibold"><span>ยอดขายรวม</span><span>฿${fmt(o.grandTotal)}</span></div>
-    </div>
-
-    <div class="mb-4">
-      <label class="text-[12px] text-[var(--ink-soft)]">มอบหมายคนขับ</label>
-      <select onchange="assignDriver('${o.id}', this.value)" class="w-full mt-1 border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm">
-        <option value="">— ยังไม่เลือก —</option>
-        ${availableDrivers.map(d=>`<option value="${d.id}" ${o.driverId===d.id?'selected':''}>${d.name} (${d.status==='available'?'ว่าง':'ไม่ว่าง'})</option>`).join('')}
-      </select>
-    </div>
-
-    <div>
-      <label class="text-[12px] text-[var(--ink-soft)] mb-1.5 block">อัปเดตสถานะ</label>
-      <div class="grid grid-cols-2 gap-2">
-        ${Object.keys(STATUS_META).map(s=>`<button onclick="setOrderStatus('${o.id}','${s}')" class="py-2 rounded-xl text-sm font-medium border" style="border-color:${o.status===s?STATUS_META[s].color:'var(--line)'};background:${o.status===s?STATUS_META[s].soft:'white'};color:${o.status===s?STATUS_META[s].color:'var(--ink)'}">${STATUS_META[s].label}</button>`).join('')}
-      </div>
-    </div>
-  `);
-}
-function assignDriver(orderId, driverId){
-  const o = db.orders.find(x=>x.id===orderId);
-  o.driverId = driverId || null;
-  if(driverId && o.status==='new'){ o.status='pending'; o.timeline.push({status:'pending',time:nowLabel()}); }
-  addNotification(`ออเดอร์ #${o.id} มอบหมายให้คนขับ ${driverId?findDriver(driverId).name:'-'}`, ['inapp']);
-  toast('อัปเดตการมอบหมายงานแล้ว','success');
-  closeModal(); render();
-}
-function setOrderStatus(orderId, status){
-  const o = db.orders.find(x=>x.id===orderId);
-  if(o.status===status) return;
-  o.status = status;
-  o.timeline.push({status, time:nowLabel()});
-  const meta = STATUS_META[status];
-  addNotification(`ออเดอร์ #${o.id} เปลี่ยนสถานะเป็น "${meta.label}"`, status==='delivered'||status==='failed' ? ['line','email'] : ['inapp']);
-  toast(`อัปเดตสถานะเป็น "${meta.label}"`,'success');
-  closeModal(); render();
+function shToggleFav(id){
+  const i = SH.favs.indexOf(id);
+  if(i >= 0) SH.favs.splice(i,1); else SH.favs.push(id);
+  shSave(); shBadges();
+  showToast(i >= 0 ? 'นำออกจากรายการโปรด' : 'เพิ่มในรายการโปรด');
 }
 
-/* =========================================================
-   ADMIN: SMART ROUTE OPTIMIZATION
-========================================================= */
-function renderRoutesAdmin(){
-  const driverId = state.routeDriverId || db.drivers[0].id;
-  const stops = driverActiveStops(driverId);
-
-  let body;
-  if(stops.length===0){
-    body = `<div class="text-center py-16 text-[var(--ink-soft)]">คนขับคนนี้ยังไม่มีงานที่ต้องจัดเส้นทาง</div>`;
-  } else if(stops.length===1){
-    body = `
-    <div class="card p-3 mb-4">${renderRouteMapSVG(stops)}</div>
-    <p class="text-sm text-[var(--ink-soft)] text-center">มีจุดส่งเดียว ไม่จำเป็นต้องจัดลำดับเส้นทาง</p>`;
-  } else {
-    const naive = naiveRouteDistance(stops);
-    const {route, totalDist} = nearestNeighborRoute(stops);
-    const savedKm = Math.max(0, naive-totalDist);
-    const savedCO2 = savedKm*CO2_FACTOR_KG_PER_KM;
-    body = `
-    <div class="card p-3 mb-4">${renderRouteMapSVG(route)}</div>
-    <div class="grid grid-cols-2 gap-3 mb-4">
-      <div class="card p-3"><div class="text-[11px] text-[var(--ink-soft)]">ระยะทางหลังปรับเส้นทาง</div><div class="font-display font-semibold text-xl">${totalDist.toFixed(1)} กม.</div></div>
-      <div class="card p-3"><div class="text-[11px] text-[var(--ink-soft)]">ประหยัดระยะทางได้</div><div class="font-display font-semibold text-xl" style="color:var(--success)">${savedKm.toFixed(1)} กม.</div></div>
-      <div class="card p-3 col-span-2" style="background:var(--success-soft)"><div class="text-[11px]" style="color:var(--success)">ลดการปล่อย CO₂ เทียบกับลำดับเดิม</div><div class="font-display font-semibold text-xl" style="color:var(--success)">${savedCO2.toFixed(1)} กก. CO₂</div></div>
-    </div>
-    <div class="font-display font-semibold text-sm mb-2">ลำดับจุดส่งที่แนะนำ</div>
-    <div class="space-y-2">
-    ${route.map((s,idx)=>`
-      <div class="card p-3 flex items-center gap-3">
-        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold text-white shrink-0" style="background:var(--accent)">${idx+1}</div>
-        <div class="flex-1 min-w-0"><div class="text-[13px] font-medium truncate">${s.name}</div><div class="text-[11px] text-[var(--ink-soft)]">ออเดอร์ ${s.orders.map(o=>'#'+o).join(', ')}</div></div>
-      </div>`).join('')}
-    </div>`;
+/* ═══════════ 25. SHOP — กราฟ canvas เขียนเอง ═══════════ */
+const shChart = {
+  prep(cv, h){
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const w = cv.clientWidth || 300;
+    cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+    cv.style.height = h + 'px';
+    const c = cv.getContext('2d');
+    c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,w,h);
+    return {c, w, h};
+  },
+  bar(cv, labels, vals, color){
+    const {c,w,h} = this.prep(cv, 170);
+    const pad = {l:46, r:8, t:10, b:26};
+    const max = Math.max(1, ...vals) * 1.15;
+    const iw = w-pad.l-pad.r, ih = h-pad.t-pad.b;
+    c.font = '10px sans-serif';
+    for(let i=0;i<=4;i++){
+      const y = pad.t + ih - ih*i/4;
+      c.strokeStyle = '#272c38'; c.beginPath(); c.moveTo(pad.l,y); c.lineTo(w-pad.r,y); c.stroke();
+      c.fillStyle = '#8b93a3'; c.textAlign = 'right'; c.fillText(shNf(max*i/4), pad.l-6, y+3);
+    }
+    const bw = iw/Math.max(1,vals.length);
+    vals.forEach((v,i)=>{
+      const bh = ih*(v/max), x = pad.l + i*bw + bw*0.2, y = pad.t + ih - bh;
+      const g = c.createLinearGradient(0,y,0,pad.t+ih);
+      g.addColorStop(0, color||'#5b8cff'); g.addColorStop(1,'rgba(91,140,255,.22)');
+      c.fillStyle = g; c.fillRect(x, y, bw*0.6, bh);
+      c.fillStyle = '#8b93a3'; c.textAlign = 'center';
+      if(i % Math.ceil(vals.length/7) === 0) c.fillText(labels[i], x+bw*0.3, h-8);
+    });
+  },
+  line(cv, labels, vals, color){
+    const {c,w,h} = this.prep(cv, 170);
+    const pad = {l:52, r:10, t:10, b:26};
+    const max = Math.max(1, ...vals) * 1.15;
+    const iw = w-pad.l-pad.r, ih = h-pad.t-pad.b;
+    c.font = '10px sans-serif';
+    for(let i=0;i<=4;i++){
+      const y = pad.t + ih - ih*i/4;
+      c.strokeStyle = '#272c38'; c.beginPath(); c.moveTo(pad.l,y); c.lineTo(w-pad.r,y); c.stroke();
+      c.fillStyle = '#8b93a3'; c.textAlign = 'right'; c.fillText(shNf(max*i/4), pad.l-6, y+3);
+    }
+    const px = i => pad.l + iw*(vals.length<2 ? 0.5 : i/(vals.length-1));
+    const py = v => pad.t + ih - ih*(v/max);
+    const g = c.createLinearGradient(0,pad.t,0,pad.t+ih);
+    g.addColorStop(0,(color||'#33c98a')+'55'); g.addColorStop(1,'transparent');
+    c.beginPath(); c.moveTo(px(0), pad.t+ih);
+    vals.forEach((v,i)=>c.lineTo(px(i), py(v)));
+    c.lineTo(px(vals.length-1), pad.t+ih); c.closePath(); c.fillStyle = g; c.fill();
+    c.beginPath(); vals.forEach((v,i)=> i ? c.lineTo(px(i),py(v)) : c.moveTo(px(i),py(v)));
+    c.strokeStyle = color||'#33c98a'; c.lineWidth = 2.2; c.lineJoin = 'round'; c.stroke();
+    c.fillStyle = color||'#33c98a';
+    vals.forEach((v,i)=>{ c.beginPath(); c.arc(px(i),py(v),2.6,0,7); c.fill(); });
+    c.fillStyle = '#8b93a3'; c.textAlign = 'center';
+    labels.forEach((L,i)=>{ if(i % Math.ceil(labels.length/6) === 0) c.fillText(L, px(i), h-8); });
+  },
+  donut(cv, parts){
+    const {c,w,h} = this.prep(cv, 170);
+    const cx = w/2, cy = h/2, R = Math.min(w,h)/2 - 12, r = R*0.62;
+    const tot = parts.reduce((s,p)=>s+p.v, 0) || 1;
+    let a = -Math.PI/2;
+    parts.forEach(p=>{
+      const s = (p.v/tot)*Math.PI*2;
+      c.beginPath(); c.arc(cx,cy,R,a,a+s); c.arc(cx,cy,r,a+s,a,true);
+      c.closePath(); c.fillStyle = p.c; c.fill(); a += s;
+    });
+    c.fillStyle = '#eef0f4'; c.textAlign = 'center'; c.font = '700 20px sans-serif';
+    c.fillText(Math.round(parts[0].v/tot*100) + '%', cx, cy+4);
+    c.fillStyle = '#8b93a3'; c.font = '10px sans-serif'; c.fillText(parts[0].label, cx, cy+19);
   }
+};
 
-  return `
-  <div class="px-4 pt-4 pb-6">
-    <div class="card p-3 mb-4 flex items-center justify-between">
-      <div class="text-[11px] text-[var(--ink-soft)]">จัดเส้นทางให้คนขับ</div>
-      <select onchange="state.routeDriverId=this.value;render()" class="text-sm border border-[var(--line)] rounded-lg px-2 py-1.5 bg-white">
-        ${db.drivers.map(d=>`<option value="${d.id}" ${d.id===driverId?'selected':''}>${d.name}</option>`).join('')}
-      </select>
-    </div>
-    ${body}
-  </div>`;
+/* ═══════════ 26. SHOP — modal helper ═══════════ */
+function shModal(title, html, onMount){
+  const box = qs('#shModalBox');
+  box.innerHTML = '<div class="shMH"><h3>' + title + '</h3>' +
+                  '<button class="shIcon" id="shMClose">✕</button></div>' + html;
+  qs('#shModal').classList.add('on');
+  qs('#shMClose').onclick = shModalClose;
+  if(onMount) onMount(box);
 }
+function shModalClose(){ qs('#shModal').classList.remove('on'); qs('#shModalBox').innerHTML = ''; }
+qs('#shModal').addEventListener('click', e=>{ if(e.target.id === 'shModal') shModalClose(); });
 
-/* =========================================================
-   ADMIN: MASTER DATA (customers / vehicles / drivers)
-========================================================= */
-function renderMaster(){
-  const tabs = [['customers','ลูกค้า'],['fleet','คนขับ & รถ']];
-  return `
-  <div class="pt-4 pb-6">
-    <div class="flex gap-2 px-4 mb-3">
-      ${tabs.map(([k,l])=>`<button onclick="state.masterTab='${k}';render()" class="flex-1 py-2 rounded-xl text-sm font-medium ${state.masterTab===k?'btn-primary':'bg-white border border-[var(--line)] text-[var(--ink-soft)]'}">${l}</button>`).join('')}
-    </div>
-    <div class="px-4">
-      ${state.masterTab==='customers'? renderCustomersMaster() : renderFleetMaster()}
-    </div>
-  </div>`;
+/* ═══════════ 27. SHOP — views ═══════════ */
+let shTab = 'store', shCat = 'all', shQuery = '', shSort = 'pop';
+const shBody = qs('#shBody');
+
+function shGo(tab){
+  shTab = tab;
+  [...qs('#shTabs').children].forEach(b=>b.classList.toggle('on', b.dataset.t === tab));
+  shBody.scrollTop = 0;
+  ({store:shViewStore, cart:shViewCart, orders:shViewOrders, fav:shViewFav,
+    room:shViewRoom, dash:shViewDash, admin:shViewAdmin})[tab]();
 }
-function renderCustomersMaster(){
-  return `
-    <button onclick="openCustomerForm()" class="w-full btn-primary font-semibold rounded-2xl py-2.5 mb-3">＋ เพิ่มลูกค้าใหม่</button>
-    <div class="space-y-2.5">
-    ${db.customers.map(c=>`
-      <div class="card p-3">
-        <div class="font-medium text-sm">${c.name}</div>
-        <div class="text-[12px] text-[var(--ink-soft)]">${c.address} · ${c.distance} กม. · ${c.phone}</div>
-      </div>`).join('')}
-    </div>`;
-}
-function openCustomerForm(){
-  openModal(`
-    <h3 class="font-display font-semibold text-lg mb-4">เพิ่มลูกค้าใหม่</h3>
-    <div class="space-y-3">
-      <input id="c-name" placeholder="ชื่อ-นามสกุล" class="w-full border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm">
-      <input id="c-address" placeholder="ที่อยู่จัดส่ง" class="w-full border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm">
-      <div class="grid grid-cols-2 gap-3">
-        <input id="c-distance" type="number" placeholder="ระยะทาง (กม.)" class="w-full border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm">
-        <input id="c-phone" placeholder="เบอร์โทร" class="w-full border border-[var(--line)] rounded-xl px-3 py-2.5 bg-white text-sm">
-      </div>
-    </div>
-    <button onclick="saveCustomer()" class="w-full btn-primary rounded-2xl py-3 font-semibold mt-5">บันทึกลูกค้า</button>
-  `);
-}
-function saveCustomer(){
-  const name = document.getElementById('c-name').value.trim();
-  const address = document.getElementById('c-address').value.trim();
-  const distance = Number(document.getElementById('c-distance').value)||1;
-  const phone = document.getElementById('c-phone').value.trim();
-  if(!name){ toast('กรุณากรอกชื่อลูกค้า','warn'); return; }
-  db.customers.push({id:'C'+Date.now(), name, address, distance, phone, coord:{x:(Math.random()*24-12), y:(Math.random()*24-12)}});
-  toast('เพิ่มลูกค้าใหม่แล้ว','success');
-  closeModal(); render();
-}
-function renderFleetMaster(){
-  return `
-    <div class="space-y-2.5">
-    ${db.drivers.map(d=>{
-      const v = findVehicle(d.vehicleId);
-      return `<div class="card p-3 flex items-center justify-between">
-        <div>
-          <div class="font-medium text-sm">${d.name}</div>
-          <div class="text-[12px] text-[var(--ink-soft)]">${v?v.name:'-'} · ความจุ ${v?v.capacity:'-'} กก.</div>
-        </div>
-        <button onclick="toggleDriverStatus('${d.id}')" class="chip" style="background:${d.status==='available'?'var(--success-soft)':'var(--warn-soft)'};color:${d.status==='available'?'var(--success)':'var(--warn)'}">${d.status==='available'?'ว่าง':'ไม่ว่าง'}</button>
-      </div>`;
-    }).join('')}
-    </div>`;
-}
-function toggleDriverStatus(driverId){
-  const d = findDriver(driverId);
-  d.status = d.status==='available'?'busy':'available';
-  render();
+qs('#shTabs').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(b) shGo(b.dataset.t);
+});
+qs('#bShop').onclick = ()=>{ qs('#shop').classList.add('on'); shGo(shTab); shBadges(); };
+qs('#shClose').onclick = ()=> qs('#shop').classList.remove('on');
+qs('#shCartBtn').onclick = ()=> shGo('cart');
+qs('#shFavBtn').onclick  = ()=> shGo('fav');
+
+/* ---------- การ์ดสินค้า ---------- */
+function shCard(p){
+  const b = document.createElement('button');
+  b.className = 'shCard';
+  const rel = document.createElement('div'); rel.className = 'shWrapRel';
+  const img = document.createElement('img'); img.className = 'shThumb'; img.alt = p.name;
+  rel.appendChild(img);
+  if(p.tag){
+    const t = document.createElement('div');
+    t.className = 'shTag ' + p.tag;
+    t.textContent = p.tag === 'sale' ? '-' + Math.round((1 - p.price/p.old)*100) + '%'
+                  : p.tag === 'new' ? 'ใหม่' : 'ขายดี';
+    rel.appendChild(t);
+  }
+  const fav = document.createElement('div');
+  fav.className = 'shFav'; fav.textContent = SH.favs.indexOf(p.id) >= 0 ? '❤️' : '🤍';
+  fav.onclick = ev=>{ ev.stopPropagation(); shToggleFav(p.id); shGo(shTab); };
+  rel.appendChild(fav);
+
+  const bd = document.createElement('div'); bd.className = 'bd';
+  bd.innerHTML =
+    '<div class="nm">' + shEsc(p.name) + '</div>' +
+    '<div class="mt"><span class="shStars">' + shStars(p.rating) + '</span> ' + p.rating.toFixed(1) +
+      ' · ขายแล้ว ' + shNf(p.sold) + '</div>' +
+    '<div class="pr">' + shB(p.price) + (p.old ? '<span class="op">' + shB(p.old) + '</span>' : '') + '</div>' +
+    (p.stock <= 0 ? '<div class="shOut">สินค้าหมด</div>'
+      : p.stock <= 5 ? '<div class="shOut">เหลือ ' + p.stock + ' ชิ้น</div>'
+      : '<div class="mt">คงเหลือ ' + shNf(p.stock) + ' ชิ้น</div>');
+
+  b.append(rel, bd);
+  b.onclick = ()=>shDetail(p.id);
+  shQueueThumb(img, p.kind, p.mt, p.mv, 0);
+  return b;
 }
 
-/* =========================================================
-   DRIVER: JOBS / HISTORY
-========================================================= */
-function driverSelector(){
-  return `
-  <div class="card p-3 mx-4 mt-4 mb-3 flex items-center justify-between">
-    <div class="text-[11px] text-[var(--ink-soft)]">คุณคือคนขับ</div>
-    <select onchange="state.driverIdView=this.value;render()" class="text-sm border border-[var(--line)] rounded-lg px-2 py-1.5 bg-white">
-      ${db.drivers.map(d=>`<option value="${d.id}" ${d.id===state.driverIdView?'selected':''}>${d.name}</option>`).join('')}
-    </select>
-  </div>`;
-}
-function renderDriverRoutePanel(driverId){
-  const stops = driverActiveStops(driverId);
-  if(stops.length<2) return '';
-  const naive = naiveRouteDistance(stops);
-  const {route, totalDist} = nearestNeighborRoute(stops);
-  const savedKm = Math.max(0, naive-totalDist);
-  return `
-  <div class="card p-3.5 mx-4 mb-3">
-    <div class="font-display font-semibold text-sm mb-1.5">เส้นทางแนะนำวันนี้ · ประหยัด ${savedKm.toFixed(1)} กม.</div>
-    <div class="flex flex-wrap gap-1.5">
-      ${route.map((s,idx)=>`<span class="chip" style="background:var(--accent-soft);color:var(--accent)">${idx+1}. ${s.name}</span>`).join('')}
-    </div>
-  </div>`;
-}
-function renderDriverJobs(){
-  const jobs = db.orders.filter(o=>o.driverId===state.driverIdView && (o.status==='pending'||o.status==='in_transit'));
-  return `
-  ${driverSelector()}
-  ${renderDriverRoutePanel(state.driverIdView)}
-  <div class="px-4 pb-6">
-    ${jobs.length===0?`<div class="text-center py-16 text-[var(--ink-soft)]">ยังไม่มีงานที่ต้องดำเนินการ</div>`:
-    jobs.map(o=>driverJobCard(o)).join('')}
-  </div>`;
-}
-function renderDriverHistory(){
-  const jobs = db.orders.filter(o=>o.driverId===state.driverIdView && (o.status==='delivered'||o.status==='failed'));
-  return `
-  ${driverSelector()}
-  <div class="px-4 pb-6">
-    ${jobs.length===0?`<div class="text-center py-16 text-[var(--ink-soft)]">ยังไม่มีประวัติงาน</div>`:
-    jobs.map(o=>driverJobCard(o)).join('')}
-  </div>`;
-}
-function driverJobCard(o){
-  const meta = STATUS_META[o.status];
-  const customer = findCustomer(o.customerId);
-  return `
-  <button onclick="openDriverJobDetail('${o.id}')" class="card w-full text-left p-3.5 mb-2.5 block">
-    <div class="flex items-center justify-between mb-1">
-      <span class="font-semibold text-sm">#${o.id}</span>
-      <span class="chip" style="background:${meta.soft};color:${meta.color}">${meta.label}</span>
-    </div>
-    <div class="text-[12.5px] text-[var(--ink-soft)]">${customer.name} · ${customer.address}</div>
-    <div class="text-[11.5px] text-[var(--ink-soft)] mt-0.5">น้ำหนัก ${o.totalWeight} กก. · ${o.distance} กม.</div>
-  </button>`;
-}
-function openDriverJobDetail(orderId){
-  const o = db.orders.find(x=>x.id===orderId);
-  const customer = findCustomer(o.customerId);
-  let actionBtns = '';
-  if(o.status==='pending') actionBtns = `<button onclick="driverSetStatus('${o.id}','in_transit')" class="w-full btn-primary rounded-2xl py-3 font-semibold">เริ่มเดินทางไปส่งสินค้า</button>`;
-  else if(o.status==='in_transit') actionBtns = `
-    <div class="grid grid-cols-2 gap-2.5">
-      <button onclick="driverSetStatus('${o.id}','delivered')" class="rounded-2xl py-3 font-semibold" style="background:var(--success);color:#fff">ส่งสำเร็จ</button>
-      <button onclick="driverSetStatus('${o.id}','failed')" class="rounded-2xl py-3 font-semibold" style="background:var(--danger-soft);color:var(--danger)">ส่งไม่สำเร็จ</button>
-    </div>`;
-  openModal(`
-    <h3 class="font-display font-semibold text-lg mb-0.5">งานจัดส่ง #${o.id}</h3>
-    <p class="text-sm text-[var(--ink-soft)] mb-4">${customer.name} · ${customer.phone}</p>
-    <div class="card p-3.5 space-y-1.5 mb-4">
-      <div class="text-sm"><span class="text-[var(--ink-soft)]">ที่อยู่:</span> ${customer.address}</div>
-      <div class="text-sm"><span class="text-[var(--ink-soft)]">ระยะทาง:</span> ${o.distance} กม.</div>
-      <div class="h-px bg-[var(--line)] my-1.5"></div>
-      ${o.items.map(i=>`<div class="flex justify-between text-sm"><span>${findProduct(i.productId).name} × ${i.qty}</span></div>`).join('')}
-      <div class="flex justify-between text-sm font-medium mt-1"><span>น้ำหนักรวม</span><span>${o.totalWeight} กก.</span></div>
-    </div>
-    ${actionBtns}
-  `);
-}
-function driverSetStatus(orderId, status){
-  setOrderStatus(orderId, status);
+/* ---------- หน้าร้าน ---------- */
+function shViewStore(){
+  shBody.innerHTML =
+    '<div class="shTools">' +
+      '<input class="shIn" id="shSearch" placeholder="ค้นหาสินค้า / รหัส SKU" value="' + shEsc(shQuery) + '">' +
+      '<select class="shIn" id="shSort">' +
+        '<option value="pop">ยอดนิยม</option><option value="new">มาใหม่</option>' +
+        '<option value="asc">ราคาต่ำ → สูง</option><option value="desc">ราคาสูง → ต่ำ</option>' +
+        '<option value="rate">คะแนนรีวิว</option></select>' +
+    '</div>' +
+    '<div class="shCats" id="shCatRow"></div>' +
+    '<div id="shResult"></div>';
+  qs('#shSort').value = shSort;
+
+  const row = qs('#shCatRow');
+  Object.keys(SH_CATS).forEach(k=>{
+    const b = document.createElement('button');
+    b.className = shCat === k ? 'on' : '';
+    b.textContent = SH_CATS[k];
+    b.onclick = ()=>{ shCat = k; shViewStore(); };
+    row.appendChild(b);
+  });
+  const draw = ()=>{
+    let list = SH.products.slice();
+    if(shCat !== 'all') list = list.filter(p=>p.cat === shCat);
+    if(shQuery){
+      const q = shQuery.toLowerCase();
+      list = list.filter(p=>(p.name + ' ' + p.sku + ' ' + p.desc).toLowerCase().indexOf(q) >= 0);
+    }
+    const S = {pop:(a,b)=>b.sold-a.sold, new:(a,b)=>b.created-a.created,
+               asc:(a,b)=>a.price-b.price, desc:(a,b)=>b.price-a.price, rate:(a,b)=>b.rating-a.rating};
+    list.sort(S[shSort]);
+    const res = qs('#shResult');
+    res.innerHTML = '';
+    if(!list.length){ res.innerHTML = '<div class="empty">ไม่พบสินค้าที่ค้นหา</div>'; return; }
+    const head = document.createElement('div');
+    head.className = 'shSect'; head.textContent = 'พบ ' + list.length + ' รายการ';
+    const g = document.createElement('div'); g.className = 'shGrid';
+    list.forEach(p=>g.appendChild(shCard(p)));
+    res.append(head, g);
+  };
+  qs('#shSearch').oninput = e=>{ shQuery = e.target.value; draw(); };
+  qs('#shSort').onchange  = e=>{ shSort = e.target.value; draw(); };
+  draw();
 }
 
-/* =========================================================
-   INIT
-========================================================= */
-render();
+/* ---------- รายละเอียดสินค้า ---------- */
+function shDetail(id){
+  const p = shProd(id); if(!p) return;
+  const variants = Object.keys(MATS[p.mt] || MATS.wood);
+  let curVar = p.mv, qty = 1;
+
+  shModal(shEsc(p.name),
+    '<div class="shGal" id="shGal"></div>' +
+    '<div class="shLine" style="align-items:center">' +
+      '<span class="shStars">' + shStars(p.rating) + ' <span style="color:var(--sub)">' + p.rating.toFixed(1) +
+        ' · ขายแล้ว ' + shNf(p.sold) + ' ชิ้น</span></span>' +
+      '<span style="color:var(--sub);font-size:11px">' + shEsc(p.sku) + '</span></div>' +
+    '<div style="font-size:24px;font-weight:700;color:var(--accent);margin:6px 0 2px">' + shB(p.price) +
+      (p.old ? '<span style="font-size:13px;color:var(--sub);text-decoration:line-through;margin-left:8px;font-weight:400">' + shB(p.old) + '</span>' : '') + '</div>' +
+    '<div style="font-size:11.5px;color:var(--sub);margin-bottom:12px">ราคารวม VAT แล้ว · ' +
+      (p.stock > 0 ? 'คงเหลือ ' + shNf(p.stock) + ' ชิ้น' : '<span style="color:var(--danger)">สินค้าหมด</span>') + '</div>' +
+    '<div class="shSect">รายละเอียด</div>' +
+    '<div style="font-size:12.5px;line-height:1.6;color:#cfd4de">' + shEsc(p.desc) + '</div>' +
+    '<div class="shLine sub" style="margin-top:8px"><span>ขนาดสินค้า</span><span>' + shEsc(p.dim) + '</span></div>' +
+    '<div class="shLine sub"><span>วัสดุหลัก</span><span>' + (MAT_TH[p.mt] || p.mt) + '</span></div>' +
+    '<div class="shSect">เลือกเฉดวัสดุ</div><div class="swrap" id="shVar" style="padding-bottom:22px"></div>' +
+    '<div class="shSect">จำนวน</div>' +
+    '<div class="shQty" id="shQtyBox"><button id="shQm">−</button><b id="shQv">1</b><button id="shQp">+</button>' +
+      '<span style="margin-left:auto;font-size:13px;font-weight:700" id="shQsum">' + shB(p.price) + '</span></div>' +
+    '<button class="shBtn pri" id="shBuy">🛒 เพิ่มลงตะกร้า</button>' +
+    '<div class="shRow2">' +
+      '<button class="shBtn" id="shTry">🏠 ลองวางในห้อง</button>' +
+      '<button class="shBtn" id="shFavD">' + (SH.favs.indexOf(id)>=0 ? '❤️ ในรายการโปรด' : '🤍 ถูกใจ') + '</button>' +
+    '</div>',
+  ()=>{
+    const gal = qs('#shGal');
+    [0,1,2].forEach(a=>{
+      const im = document.createElement('img'); im.alt = p.name + ' มุม ' + (a+1);
+      gal.appendChild(im);
+      shQueueThumb(im, p.kind, p.mt, curVar, a);
+    });
+    const vr = qs('#shVar');
+    const drawVars = ()=>{
+      vr.textContent = '';
+      variants.forEach(v=>{
+        const b = document.createElement('button');
+        b.className = 'sw' + (v === curVar ? ' on' : '');
+        b.style.background = '#' + MATS[p.mt][v].toString(16).padStart(6,'0');
+        const s = document.createElement('span'); s.textContent = v; b.appendChild(s);
+        b.onclick = ()=>{
+          curVar = v; drawVars();
+          [...gal.children].forEach((im,a)=>{ im.src = ''; shQueueThumb(im, p.kind, p.mt, curVar, a); });
+        };
+        vr.appendChild(b);
+      });
+    };
+    drawVars();
+    const sync = ()=>{ qs('#shQv').textContent = qty; qs('#shQsum').textContent = shB(p.price*qty); };
+    qs('#shQm').onclick = ()=>{ qty = Math.max(1, qty-1); sync(); };
+    qs('#shQp').onclick = ()=>{ qty = Math.min(Math.max(1,p.stock), qty+1); sync(); };
+    qs('#shBuy').onclick = ()=>{ shAddCart(id, qty); shModalClose(); };
+    qs('#shFavD').onclick = ()=>{ shToggleFav(id); shModalClose(); shGo(shTab); };
+    qs('#shTry').onclick = ()=>{
+      shModalClose();
+      qs('#shop').classList.remove('on');
+      addItem(p.kind);
+      if(selected) applyMaterial(p.mt, curVar);
+      showToast('วาง "' + p.name + '" ในห้องแล้ว');
+    };
+  });
+}
+
+/* ---------- ตะกร้า + ชำระเงิน ---------- */
+function shViewCart(){
+  const t = shCartCalc();
+  if(!SH.cart.length){
+    shBody.innerHTML = '<div class="empty">ตะกร้าว่างเปล่า<br><br>' +
+      '<button class="shBtn pri" id="shGoStore" style="max-width:220px;margin:0 auto">ไปเลือกสินค้า</button></div>';
+    qs('#shGoStore').onclick = ()=>shGo('store');
+    return;
+  }
+  shBody.innerHTML =
+    '<div class="shSect">สินค้าในตะกร้า (' + t.units + ' ชิ้น)</div><div id="shCartList"></div>' +
+    '<div class="shSect">ส่วนลด</div>' +
+    '<div class="shTools"><input class="shIn" id="shCode" placeholder="กรอกโค้ดส่วนลด" value="' + shEsc(SH.coupon||'') + '">' +
+      '<button class="shBtn sm pri" id="shApply">ใช้โค้ด</button></div>' +
+    '<div style="font-size:11px;color:var(--sub);line-height:1.7;margin-bottom:6px">' +
+      Object.keys(SH_COUPONS).map(c=>'<b style="color:var(--warn)">' + c + '</b> — ' + SH_COUPONS[c].label).join('<br>') + '</div>' +
+    '<div class="shBox" style="margin-top:12px">' +
+      '<div class="shLine"><span>ยอดรวมสินค้า</span><span>' + shB2(t.sub) + '</span></div>' +
+      (t.disc ? '<div class="shLine"><span>ส่วนลด</span><span style="color:#33c98a">-' + shB2(t.disc) + '</span></div>' : '') +
+      '<div class="shLine"><span>ค่าจัดส่ง' + (t.ship===0 ? ' (ฟรี)' : '') + '</span><span>' + (t.ship ? shB2(t.ship) : 'ฟรี') + '</span></div>' +
+      '<div class="shLine sub"><span>ภาษีมูลค่าเพิ่ม ' + SH_VAT + '%</span><span>' + shB2(t.vat) + '</span></div>' +
+      '<div class="shLine tot"><span>รวมทั้งสิ้น</span><span>' + shB2(t.total) + '</span></div>' +
+      (t.ship ? '<div style="font-size:11px;color:var(--sub);margin-top:8px">ซื้อเพิ่มอีก ' +
+        shB(SH_SHIP_FREE - (t.sub - t.disc)) + ' เพื่อรับสิทธิ์ส่งฟรี</div>' : '') +
+    '</div>' +
+    '<button class="shBtn pri" id="shCheckout">ดำเนินการสั่งซื้อ</button>' +
+    '<button class="shBtn dgr" id="shEmpty">ล้างตะกร้า</button>';
+
+  const list = qs('#shCartList');
+  SH.cart.forEach(c=>{
+    const p = shProd(c.id); if(!p) return;
+    const row = document.createElement('div'); row.className = 'shItem';
+    const im = document.createElement('img'); im.alt = p.name;
+    const info = document.createElement('div'); info.className = 'i';
+    info.innerHTML = '<b>' + shEsc(p.name) + '</b><small>' + shEsc(p.sku) + ' · ' + shB(p.price) + ' / ชิ้น</small>';
+    const q = document.createElement('div'); q.className = 'shQty';
+    const bm = document.createElement('button'); bm.textContent = '−';
+    const bv = document.createElement('b'); bv.textContent = c.qty;
+    const bp = document.createElement('button'); bp.textContent = '+';
+    const sum = document.createElement('span');
+    sum.style.cssText = 'margin-left:auto;font-size:12.5px;font-weight:700';
+    sum.textContent = shB(p.price * c.qty);
+    const del = document.createElement('button'); del.textContent = '🗑'; del.style.color = 'var(--danger)';
+    bm.onclick = ()=>{ c.qty = Math.max(1, c.qty-1); shSave(); shViewCart(); shBadges(); };
+    bp.onclick = ()=>{ if(c.qty < p.stock){ c.qty++; shSave(); shViewCart(); shBadges(); } else showToast('เกินสต็อก'); };
+    del.onclick = ()=>{ SH.cart = SH.cart.filter(x=>x.id !== c.id); shSave(); shViewCart(); shBadges(); };
+    q.append(bm, bv, bp, sum, del);
+    info.appendChild(q);
+    row.append(im, info);
+    list.appendChild(row);
+    shQueueThumb(im, p.kind, p.mt, p.mv, 0);
+  });
+  qs('#shApply').onclick = ()=>{
+    const code = (qs('#shCode').value || '').trim().toUpperCase();
+    if(!code){ SH.coupon = null; shSave(); shViewCart(); return; }
+    const cp = SH_COUPONS[code];
+    if(!cp){ showToast('ไม่พบโค้ดนี้'); return; }
+    if(t.sub < cp.min){ showToast('ยอดขั้นต่ำ ' + shB(cp.min)); return; }
+    SH.coupon = code; shSave(); shViewCart(); showToast('ใช้โค้ด ' + code + ' แล้ว');
+  };
+  qs('#shEmpty').onclick = ()=>{ SH.cart = []; SH.coupon = null; shSave(); shViewCart(); shBadges(); };
+  qs('#shCheckout').onclick = shCheckout;
+}
+
+function shCheckout(){
+  const t = shCartCalc();
+  const pf = SH.profile;
+  shModal('ยืนยันคำสั่งซื้อ',
+    '<div class="shFld"><label>ชื่อผู้รับ</label><input class="shIn" id="ckName" value="' + shEsc(pf.name) + '"></div>' +
+    '<div class="shFld"><label>เบอร์โทรศัพท์</label><input class="shIn" id="ckPhone" inputmode="tel" value="' + shEsc(pf.phone) + '"></div>' +
+    '<div class="shFld"><label>ที่อยู่จัดส่ง</label><input class="shIn" id="ckAddr" value="' + shEsc(pf.addr) + '"></div>' +
+    '<div class="shFld"><label>วิธีชำระเงิน</label><select class="shIn" id="ckPay">' +
+      '<option value="transfer">โอนผ่านธนาคาร / พร้อมเพย์</option>' +
+      '<option value="cod">เก็บเงินปลายทาง</option>' +
+      '<option value="card">บัตรเครดิต / เดบิต</option></select></div>' +
+    '<div class="shBox">' +
+      '<div class="shLine"><span>สินค้า ' + t.units + ' ชิ้น</span><span>' + shB2(t.sub) + '</span></div>' +
+      (t.disc ? '<div class="shLine"><span>ส่วนลด</span><span style="color:#33c98a">-' + shB2(t.disc) + '</span></div>' : '') +
+      '<div class="shLine"><span>ค่าจัดส่ง</span><span>' + (t.ship ? shB2(t.ship) : 'ฟรี') + '</span></div>' +
+      '<div class="shLine sub"><span>VAT ' + SH_VAT + '%</span><span>' + shB2(t.vat) + '</span></div>' +
+      '<div class="shLine tot"><span>ยอดชำระ</span><span>' + shB2(t.total) + '</span></div></div>' +
+    '<button class="shBtn pri" id="ckGo">ยืนยันสั่งซื้อ</button>',
+  ()=>{
+    qs('#ckPay').value = pf.pay || 'transfer';
+    qs('#ckGo').onclick = ()=>{
+      const name = qs('#ckName').value.trim(), phone = qs('#ckPhone').value.trim(), addr = qs('#ckAddr').value.trim();
+      if(!name || !phone || !addr){ showToast('กรอกข้อมูลผู้รับให้ครบ'); return; }
+      if(!/^[0-9+\- ]{9,15}$/.test(phone)){ showToast('เบอร์โทรไม่ถูกต้อง'); return; }
+      SH.profile = {name, phone, addr, pay: qs('#ckPay').value};
+
+      const lines = SH.cart.map(c=>{
+        const p = shProd(c.id);
+        return {id:c.id, name:p.name, sku:p.sku, kind:p.kind, mt:p.mt, mv:p.mv, price:p.price, qty:c.qty};
+      });
+      lines.forEach(l=>{
+        const p = shProd(l.id);
+        if(p){
+          p.stock = Math.max(0, p.stock - l.qty);
+          p.sold += l.qty;
+          if(p.stock <= 5) showToast('⚠ สต็อกต่ำ: ' + p.name + ' เหลือ ' + p.stock);
+        }
+      });
+      const now = Date.now();
+      const order = {
+        id: shUid('o'),
+        code: 'SO-' + new Date(now).toISOString().slice(2,10).replace(/-/g,'') + '-' + String(SH.orders.length+1).padStart(3,'0'),
+        items: lines, totals: t, coupon: SH.coupon,
+        customer: Object.assign({}, SH.profile),
+        status: 'pending', createdAt: now,
+        timeline: [{s:'pending', at:now}]
+      };
+      SH.orders.unshift(order);
+      SH.cart = []; SH.coupon = null;
+      shSave(); shBadges(); shModalClose(); shGo('orders');
+      showToast('สั่งซื้อสำเร็จ · ' + order.code);
+    };
+  });
+}
+
+/* ---------- คำสั่งซื้อ ---------- */
+const SH_ST = {
+  pending : {l:'รอชำระเงิน', c:'s-pending',  i:'⏳'},
+  paid    : {l:'ชำระแล้ว',   c:'s-paid',     i:'💳'},
+  packing : {l:'กำลังแพ็ก',  c:'s-packing',  i:'📦'},
+  shipping: {l:'กำลังจัดส่ง',c:'s-shipping', i:'🚚'},
+  done    : {l:'จัดส่งสำเร็จ',c:'s-done',    i:'✅'},
+  cancel  : {l:'ยกเลิก',     c:'s-cancel',   i:'✖'}
+};
+const SH_NEXT = {pending:['paid','cancel'], paid:['packing'], packing:['shipping'],
+                 shipping:['done'], done:[], cancel:[]};
+const shPill = s => '<span class="shPill ' + SH_ST[s].c + '">' + SH_ST[s].i + ' ' + SH_ST[s].l + '</span>';
+
+function shViewOrders(){
+  if(!SH.orders.length){ shBody.innerHTML = '<div class="empty">ยังไม่มีคำสั่งซื้อ</div>'; return; }
+  shBody.innerHTML = '<div class="shSect">คำสั่งซื้อทั้งหมด (' + SH.orders.length + ')</div>' +
+    SH.orders.map(o=>
+      '<div class="shBox"><div style="display:flex;gap:9px;align-items:center;margin-bottom:7px">' +
+      '<b style="flex:1;font-size:13px">' + shEsc(o.code) + '</b>' + shPill(o.status) + '</div>' +
+      '<div style="font-size:11.5px;color:var(--sub)">' + shDT(o.createdAt) + ' · ' +
+        o.items.reduce((s,i)=>s+i.qty,0) + ' ชิ้น · ' + shB2(o.totals.total) + '</div>' +
+      '<button class="shBtn sm" style="margin-top:9px" data-od="' + o.id + '">ดูรายละเอียด</button></div>'
+    ).join('');
+  shBody.querySelectorAll('[data-od]').forEach(b=>b.onclick = ()=>shOrderDetail(b.dataset.od));
+}
+function shOrderDetail(id){
+  const o = SH.orders.find(x=>x.id === id); if(!o) return;
+  const nexts = SH_NEXT[o.status] || [];
+  shModal('คำสั่งซื้อ ' + shEsc(o.code),
+    '<div style="margin-bottom:12px">' + shPill(o.status) + '</div>' +
+    '<div class="shBox"><h4>ผู้รับสินค้า</h4>' +
+      '<div class="shLine sub"><span>ชื่อ</span><span>' + shEsc(o.customer.name) + '</span></div>' +
+      '<div class="shLine sub"><span>โทรศัพท์</span><span>' + shEsc(o.customer.phone) + '</span></div>' +
+      '<div class="shLine sub"><span>ที่อยู่</span><span style="text-align:right;max-width:62%">' + shEsc(o.customer.addr) + '</span></div>' +
+      '<div class="shLine sub"><span>ชำระเงิน</span><span>' +
+        ({transfer:'โอนธนาคาร', cod:'เก็บปลายทาง', card:'บัตรเครดิต'}[o.customer.pay] || '-') + '</span></div></div>' +
+    '<div class="shBox"><h4>รายการสินค้า</h4>' +
+      o.items.map(i=>'<div class="shLine"><span>' + shEsc(i.name) + ' × ' + i.qty +
+        '</span><span>' + shB2(i.price*i.qty) + '</span></div>').join('') +
+      (o.coupon ? '<div class="shLine sub"><span>โค้ด</span><span>' + shEsc(o.coupon) + '</span></div>' : '') +
+      '<div class="shLine sub"><span>ค่าจัดส่ง</span><span>' + (o.totals.ship ? shB2(o.totals.ship) : 'ฟรี') + '</span></div>' +
+      '<div class="shLine sub"><span>VAT</span><span>' + shB2(o.totals.vat) + '</span></div>' +
+      '<div class="shLine tot"><span>ยอดรวม</span><span>' + shB2(o.totals.total) + '</span></div></div>' +
+    '<div class="shBox"><h4>สถานะการจัดส่ง</h4>' +
+      o.timeline.slice().reverse().map(t=>
+        '<div class="shLine sub"><span>' + SH_ST[t.s].i + ' ' + SH_ST[t.s].l + '</span><span>' + shDT(t.at) + '</span></div>'
+      ).join('') + '</div>' +
+    (nexts.length ? '<div class="shSect">อัปเดตสถานะ</div><div id="shActs"></div>' : '') +
+    '<button class="shBtn" id="shReorder">🔁 สั่งซ้ำรายการนี้</button>',
+  ()=>{
+    const acts = qs('#shActs');
+    if(acts) nexts.forEach(s=>{
+      const b = document.createElement('button');
+      b.className = 'shBtn ' + (s === 'done' ? 'ok' : s === 'cancel' ? 'dgr' : 'pri');
+      b.textContent = SH_ST[s].i + ' ' + SH_ST[s].l;
+      b.onclick = ()=>{
+        o.status = s; o.timeline.push({s, at:Date.now()});
+        if(s === 'cancel') o.items.forEach(i=>{ const p = shProd(i.id); if(p){ p.stock += i.qty; p.sold -= i.qty; } });
+        shSave(); shModalClose(); shGo('orders'); showToast('อัปเดตเป็น ' + SH_ST[s].l);
+      };
+      acts.appendChild(b);
+    });
+    qs('#shReorder').onclick = ()=>{
+      o.items.forEach(i=>{ const p = shProd(i.id); if(p && p.stock > 0) shAddCart(i.id, Math.min(i.qty, p.stock)); });
+      shModalClose(); shGo('cart');
+    };
+  });
+}
+
+/* ---------- รายการโปรด ---------- */
+function shViewFav(){
+  const list = SH.favs.map(shProd).filter(Boolean);
+  if(!list.length){ shBody.innerHTML = '<div class="empty">ยังไม่มีรายการโปรด<br>แตะ 🤍 บนการ์ดสินค้าเพื่อบันทึก</div>'; return; }
+  shBody.innerHTML = '<div class="shSect">รายการโปรด (' + list.length + ')</div><div class="shGrid" id="shFavGrid"></div>';
+  const g = qs('#shFavGrid'); list.forEach(p=>g.appendChild(shCard(p)));
+}
+
+/* ---------- ห้องของฉัน (เชื่อมกับฉาก 3D) ---------- */
+function shViewRoom(){
+  const counts = {};
+  items.forEach(o=>{ const k = o.userData && o.userData.kind; if(k && CATALOG[k]) counts[k] = (counts[k]||0) + 1; });
+  const keys = Object.keys(counts);
+  if(!keys.length){
+    shBody.innerHTML = '<div class="empty">ยังไม่มีเฟอร์นิเจอร์ในห้อง<br>ปิดหน้าร้านแล้วเพิ่มจากแคตตาล็อก หรือกด "ลองวางในห้อง" ที่หน้าสินค้า</div>';
+    return;
+  }
+  const rows = keys.map(k=>{
+    const match = SH.products.filter(p=>p.kind === k).sort((a,b)=>a.price-b.price)[0];
+    return {kind:k, n:counts[k], p:match};
+  }).filter(r=>r.p);
+  const total = rows.reduce((s,r)=>s + r.p.price*r.n, 0);
+  const area = (roomW*roomD).toFixed(1);
+
+  shBody.innerHTML =
+    '<div class="shKpis">' +
+      '<div class="shKpi acc"><div class="l">ขนาดห้อง</div><div class="v">' + area + ' ตร.ม.</div>' +
+        '<div class="d">' + roomW.toFixed(1) + ' × ' + roomD.toFixed(1) + ' × ' + roomH.toFixed(2) + ' ม.</div></div>' +
+      '<div class="shKpi"><div class="l">เฟอร์นิเจอร์ในห้อง</div><div class="v">' + items.length + '</div>' +
+        '<div class="d">' + rows.length + ' ประเภท</div></div>' +
+      '<div class="shKpi ok"><div class="l">มูลค่ารวมโดยประมาณ</div><div class="v">' + shB(total) + '</div>' +
+        '<div class="d">อ้างอิงรุ่นราคาประหยัดสุด</div></div>' +
+    '</div>' +
+    '<div class="shSect">รายการที่จัดวางอยู่</div>' +
+    '<div class="shTbl"><table><thead><tr><th>สินค้าที่ตรงกับโมเดล</th><th class="n">จำนวน</th>' +
+      '<th class="n">ราคา/ชิ้น</th><th class="n">รวม</th></tr></thead><tbody>' +
+      rows.map(r=>'<tr><td>' + shEsc(r.p.name) + '<br><span style="color:var(--sub);font-size:10.5px">' +
+        shEsc(r.p.sku) + '</span></td><td class="n">' + r.n + '</td><td class="n">' + shB(r.p.price) +
+        '</td><td class="n">' + shB(r.p.price*r.n) + '</td></tr>').join('') +
+      '<tr><td colspan="3" style="text-align:right;font-weight:700">รวมทั้งหมด</td>' +
+      '<td class="n" style="font-weight:700;color:var(--accent)">' + shB(total) + '</td></tr>' +
+      '</tbody></table></div>' +
+    '<button class="shBtn pri" id="shRoomCart">🛒 เพิ่มทั้งห้องลงตะกร้า</button>' +
+    '<button class="shBtn" id="shRoomCsv">⬇ ส่งออกใบเสนอราคา (CSV)</button>';
+
+  qs('#shRoomCart').onclick = ()=>{
+    let ok = 0;
+    rows.forEach(r=>{ if(r.p.stock > 0){ shAddCart(r.p.id, Math.min(r.n, r.p.stock)); ok++; } });
+    if(ok) shGo('cart');
+  };
+  qs('#shRoomCsv').onclick = ()=>{
+    const head = ['SKU','สินค้า','จำนวน','ราคาต่อชิ้น','รวม'];
+    const body = rows.map(r=>[r.p.sku, r.p.name, r.n, r.p.price, r.p.price*r.n]);
+    body.push(['','รวมทั้งหมด','','', total]);
+    const csv = '\uFEFF' + [head].concat(body)
+      .map(r=>r.map(x=>'"' + String(x).replace(/"/g,'""') + '"').join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+    a.download = 'room-quotation-' + shDay(Date.now()) + '.csv'; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+    showToast('ส่งออกใบเสนอราคาแล้ว');
+  };
+}
+
+/* ---------- แดชบอร์ด ---------- */
+function shViewDash(){
+  const paid = SH.orders.filter(o=>o.status !== 'cancel' && o.status !== 'pending');
+  const done = SH.orders.filter(o=>o.status === 'done');
+  const rev  = paid.reduce((s,o)=>s + o.totals.total, 0);
+  const units= paid.reduce((s,o)=>s + o.items.reduce((a,i)=>a+i.qty,0), 0);
+  const aov  = paid.length ? rev/paid.length : 0;
+  const low  = SH.products.filter(p=>p.stock <= 5);
+  const stockVal = SH.products.reduce((s,p)=>s + p.price*p.stock, 0);
+
+  const labels = [], revV = [], ordV = [];
+  for(let i=13;i>=0;i--){
+    const k = shDay(Date.now() - i*86400000);
+    labels.push(new Date(Date.now()-i*86400000).toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
+    const dd = SH.orders.filter(o=>shDay(o.createdAt) === k && o.status !== 'cancel');
+    ordV.push(dd.length);
+    revV.push(dd.reduce((s,o)=>s + o.totals.total, 0));
+  }
+  const top = SH.products.slice().sort((a,b)=>b.sold-a.sold).slice(0,6);
+  const stCount = {};
+  Object.keys(SH_ST).forEach(s=>stCount[s] = SH.orders.filter(o=>o.status===s).length);
+
+  shBody.innerHTML =
+    '<div class="shKpis">' +
+      '<div class="shKpi acc"><div class="l">รายได้รวม</div><div class="v">' + shB(rev) + '</div>' +
+        '<div class="d">จาก ' + paid.length + ' คำสั่งซื้อ</div></div>' +
+      '<div class="shKpi"><div class="l">คำสั่งซื้อทั้งหมด</div><div class="v">' + SH.orders.length + '</div>' +
+        '<div class="d">สำเร็จ ' + done.length + ' · รอชำระ ' + stCount.pending + '</div></div>' +
+      '<div class="shKpi ok"><div class="l">ยอดเฉลี่ย/ออเดอร์</div><div class="v">' + shB(aov) + '</div>' +
+        '<div class="d">ขายได้ ' + shNf(units) + ' ชิ้น</div></div>' +
+      '<div class="shKpi wn"><div class="l">มูลค่าสต็อกคงเหลือ</div><div class="v">' + shB(stockVal) + '</div>' +
+        '<div class="d">' + SH.products.length + ' รายการสินค้า</div></div>' +
+      '<div class="shKpi ' + (low.length ? 'dg' : 'ok') + '"><div class="l">สินค้าสต็อกต่ำ</div>' +
+        '<div class="v">' + low.length + '</div><div class="d">' + (low.length ? 'ต้องเติมสต็อก' : 'ระดับปกติ') + '</div></div>' +
+    '</div>' +
+    '<div class="shBox"><h4>📈 รายได้รายวัน (14 วัน)</h4><canvas class="shChart" id="dChart1"></canvas></div>' +
+    '<div class="shBox"><h4>🧾 จำนวนคำสั่งซื้อรายวัน</h4><canvas class="shChart" id="dChart2"></canvas></div>' +
+    '<div class="shBox"><h4>🎯 สัดส่วนสถานะคำสั่งซื้อ</h4><canvas class="shChart" id="dChart3"></canvas>' +
+      '<div class="shLeg">' +
+        '<span><i style="background:#33c98a"></i>สำเร็จ ' + stCount.done + '</span>' +
+        '<span><i style="background:#5b8cff"></i>กำลังส่ง ' + (stCount.shipping+stCount.packing+stCount.paid) + '</span>' +
+        '<span><i style="background:#ffb454"></i>รอชำระ ' + stCount.pending + '</span>' +
+        '<span><i style="background:#ff6161"></i>ยกเลิก ' + stCount.cancel + '</span></div></div>' +
+    '<div class="shBox"><h4>🏆 สินค้าขายดี</h4><div class="shTbl"><table>' +
+      '<thead><tr><th>สินค้า</th><th class="n">ขายแล้ว</th><th class="n">คงเหลือ</th><th class="n">รายได้สะสม</th></tr></thead><tbody>' +
+      top.map(p=>'<tr><td>' + shEsc(p.name) + '</td><td class="n">' + shNf(p.sold) + '</td><td class="n"' +
+        (p.stock<=5 ? ' style="color:var(--danger);font-weight:700"' : '') + '>' + shNf(p.stock) + '</td>' +
+        '<td class="n">' + shB(p.sold*p.price) + '</td></tr>').join('') +
+      '</tbody></table></div></div>' +
+    (low.length ? '<div class="shBox" style="border-color:#5a2b2b"><h4 style="color:var(--danger)">⚠ แจ้งเตือนสต็อกต่ำ</h4>' +
+      '<div class="shTbl"><table><thead><tr><th>สินค้า</th><th class="n">คงเหลือ</th><th class="n">แนะนำเติม</th></tr></thead><tbody>' +
+      low.map(p=>'<tr><td>' + shEsc(p.name) + '</td><td class="n" style="color:var(--danger)">' + p.stock +
+        '</td><td class="n">' + Math.max(10, 20-p.stock) + '</td></tr>').join('') +
+      '</tbody></table></div></div>' : '') +
+    '<button class="shBtn" id="shExpOrd">⬇ ส่งออกรายงานคำสั่งซื้อ (CSV)</button>';
+
+  shChart.line(qs('#dChart1'), labels, revV, '#33c98a');
+  shChart.bar(qs('#dChart2'), labels, ordV, '#5b8cff');
+  shChart.donut(qs('#dChart3'), [
+    {label:'สำเร็จ', v:stCount.done, c:'#33c98a'},
+    {label:'ดำเนินการ', v:stCount.shipping+stCount.packing+stCount.paid, c:'#5b8cff'},
+    {label:'รอชำระ', v:stCount.pending, c:'#ffb454'},
+    {label:'ยกเลิก', v:stCount.cancel, c:'#ff6161'}
+  ]);
+  qs('#shExpOrd').onclick = ()=>{
+    const head = ['เลขที่','วันที่','ผู้รับ','โทรศัพท์','จำนวนชิ้น','ยอดสินค้า','ส่วนลด','ค่าส่ง','VAT','รวม','สถานะ'];
+    const rows = SH.orders.map(o=>[o.code, shDT(o.createdAt), o.customer.name, o.customer.phone,
+      o.items.reduce((s,i)=>s+i.qty,0), o.totals.sub.toFixed(2), o.totals.disc.toFixed(2),
+      o.totals.ship.toFixed(2), o.totals.vat.toFixed(2), o.totals.total.toFixed(2), SH_ST[o.status].l]);
+    const csv = '\uFEFF' + [head].concat(rows)
+      .map(r=>r.map(x=>'"' + String(x).replace(/"/g,'""') + '"').join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+    a.download = 'shop-orders-' + shDay(Date.now()) + '.csv'; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+    showToast('ส่งออกรายงานแล้ว');
+  };
+}
+
+/* ---------- จัดการสินค้า (CRUD) ---------- */
+function shViewAdmin(){
+  shBody.innerHTML =
+    '<div class="shTools"><input class="shIn" id="adQ" placeholder="ค้นหาสินค้า / SKU">' +
+      '<button class="shBtn sm pri" id="adNew">+ เพิ่มสินค้า</button></div>' +
+    '<div id="adList"></div>' +
+    '<button class="shBtn dgr" id="adReset" style="margin-top:16px">♻️ รีเซ็ตข้อมูลร้านค้าทั้งหมด</button>';
+  const draw = ()=>{
+    const q = (qs('#adQ').value||'').toLowerCase();
+    const list = SH.products.filter(p=>!q || (p.name+' '+p.sku).toLowerCase().indexOf(q) >= 0);
+    qs('#adList').innerHTML = list.length ?
+      '<div class="shTbl"><table><thead><tr><th>สินค้า</th><th class="n">ราคา</th>' +
+      '<th class="n">สต็อก</th><th class="n">จัดการ</th></tr></thead><tbody>' +
+      list.map(p=>'<tr><td><b>' + shEsc(p.name) + '</b><br><span style="color:var(--sub);font-size:10.5px">' +
+        shEsc(p.sku) + ' · ' + SH_CATS[p.cat] + '</span></td>' +
+        '<td class="n">' + shB(p.price) + '</td>' +
+        '<td class="n"' + (p.stock<=5 ? ' style="color:var(--danger);font-weight:700"' : '') + '>' + shNf(p.stock) + '</td>' +
+        '<td class="n"><button class="shBtn sm" data-ed="' + p.id + '">แก้ไข</button> ' +
+        '<button class="shBtn sm dgr" data-dl="' + p.id + '">ลบ</button></td></tr>').join('') +
+      '</tbody></table></div>' : '<div class="empty">ไม่พบสินค้า</div>';
+    qs('#adList').querySelectorAll('[data-ed]').forEach(b=>b.onclick = ()=>form(shProd(b.dataset.ed)));
+    qs('#adList').querySelectorAll('[data-dl]').forEach(b=>b.onclick = ()=>{
+      const p = shProd(b.dataset.dl);
+      if(SH.orders.some(o=>o.items.some(i=>i.id === p.id))){ showToast('ลบไม่ได้ — มีคำสั่งซื้ออ้างอิงสินค้านี้'); return; }
+      if(!confirm('ลบ "' + p.name + '" ?')) return;
+      SH.products = SH.products.filter(x=>x.id !== p.id);
+      SH.cart = SH.cart.filter(c=>c.id !== p.id);
+      SH.favs = SH.favs.filter(f=>f !== p.id);
+      shSave(); draw(); shBadges(); showToast('ลบสินค้าแล้ว');
+    });
+  };
+  function form(rec){
+    const isNew = !rec;
+    const r = rec || {kind:'chair', cat:'seat', mt:'wood', mv:'oak', price:1000, old:0,
+                      stock:10, rating:4.5, sold:0, name:'', sku:'', desc:'', dim:'', tag:''};
+    shModal(isNew ? 'เพิ่มสินค้าใหม่' : 'แก้ไข ' + shEsc(r.name),
+      '<div class="shFld"><label>ชื่อสินค้า</label><input class="shIn" id="fN" value="' + shEsc(r.name) + '"></div>' +
+      '<div class="shFld"><label>รหัส SKU</label><input class="shIn" id="fS" value="' + shEsc(r.sku) + '"></div>' +
+      '<div class="shFld"><label>โมเดล 3D ที่ใช้</label><select class="shIn" id="fK">' +
+        Object.keys(CATALOG).map(k=>'<option value="' + k + '"' + (k===r.kind?' selected':'') + '>' +
+          CATALOG[k].icon + ' ' + CATALOG[k].label + '</option>').join('') + '</select></div>' +
+      '<div class="shFld"><label>หมวดหมู่</label><select class="shIn" id="fC">' +
+        Object.keys(SH_CATS).filter(c=>c!=='all').map(c=>'<option value="' + c + '"' +
+          (c===r.cat?' selected':'') + '>' + SH_CATS[c] + '</option>').join('') + '</select></div>' +
+      '<div class="shRow2">' +
+        '<div class="shFld"><label>วัสดุ</label><select class="shIn" id="fMT">' +
+          Object.keys(MATS).map(m=>'<option value="' + m + '"' + (m===r.mt?' selected':'') + '>' + MAT_TH[m] + '</option>').join('') + '</select></div>' +
+        '<div class="shFld"><label>เฉดสี</label><select class="shIn" id="fMV"></select></div></div>' +
+      '<div class="shRow2">' +
+        '<div class="shFld"><label>ราคาขาย</label><input class="shIn" id="fP" type="number" min="0" value="' + r.price + '"></div>' +
+        '<div class="shFld"><label>ราคาก่อนลด (0=ไม่มี)</label><input class="shIn" id="fO" type="number" min="0" value="' + (r.old||0) + '"></div></div>' +
+      '<div class="shRow2">' +
+        '<div class="shFld"><label>สต็อก</label><input class="shIn" id="fST" type="number" min="0" value="' + r.stock + '"></div>' +
+        '<div class="shFld"><label>คะแนนรีวิว</label><input class="shIn" id="fR" type="number" min="0" max="5" step="0.1" value="' + r.rating + '"></div></div>' +
+      '<div class="shFld"><label>ขนาดสินค้า</label><input class="shIn" id="fD" value="' + shEsc(r.dim) + '"></div>' +
+      '<div class="shFld"><label>คำอธิบาย</label><input class="shIn" id="fDS" value="' + shEsc(r.desc) + '"></div>' +
+      '<div class="shFld"><label>ป้ายกำกับ</label><select class="shIn" id="fT">' +
+        [['','ไม่มี'],['sale','ลดราคา'],['new','สินค้าใหม่'],['hot','ขายดี']]
+          .map(t=>'<option value="' + t[0] + '"' + (t[0]===r.tag?' selected':'') + '>' + t[1] + '</option>').join('') + '</select></div>' +
+      '<button class="shBtn pri" id="fSave">บันทึก</button>',
+    ()=>{
+      const fillVars = ()=>{
+        const mt = qs('#fMT').value;
+        qs('#fMV').innerHTML = Object.keys(MATS[mt]).map(v=>'<option value="' + v + '"' +
+          (v===r.mv?' selected':'') + '>' + v + '</option>').join('');
+      };
+      qs('#fMT').onchange = fillVars; fillVars();
+      qs('#fSave').onclick = ()=>{
+        const name = qs('#fN').value.trim(), sku = qs('#fS').value.trim();
+        if(!name || !sku){ showToast('กรอกชื่อสินค้าและ SKU'); return; }
+        const price = Math.max(0, +qs('#fP').value || 0);
+        if(!price){ showToast('ราคาต้องมากกว่า 0'); return; }
+        const obj = rec || {id: shUid('p'), created: Date.now(), sold:0};
+        Object.assign(obj, {
+          name, sku, kind: qs('#fK').value, cat: qs('#fC').value,
+          mt: qs('#fMT').value, mv: qs('#fMV').value,
+          price, old: Math.max(0, +qs('#fO').value || 0),
+          stock: Math.max(0, +qs('#fST').value || 0),
+          rating: clamp(+qs('#fR').value || 4, 0, 5),
+          dim: qs('#fD').value.trim(), desc: qs('#fDS').value.trim(), tag: qs('#fT').value
+        });
+        if(isNew) SH.products.push(obj);
+        shSave(); shModalClose(); draw(); showToast('บันทึกสินค้าแล้ว');
+      };
+    });
+  }
+  qs('#adQ').oninput = draw;
+  qs('#adNew').onclick = ()=>form(null);
+  qs('#adReset').onclick = ()=>{
+    if(!confirm('ลบข้อมูลร้านค้าทั้งหมดและสร้างใหม่?')) return;
+    SH = shSeed(); shSave(); shBadges(); shGo('store'); showToast('รีเซ็ตข้อมูลร้านค้าแล้ว');
+  };
+  draw();
+}
+
+shBadges();
 </script>
 </body>
 </html>
